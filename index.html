@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Price Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -19,11 +20,13 @@
             border-radius: 10px;
             padding: 15px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow-x: auto;
         }
         h1 {
             color: #333;
             text-align: center;
             font-size: 1.5rem;
+            margin-bottom: 20px;
         }
         .controls {
             display: flex;
@@ -39,6 +42,7 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9rem;
+            white-space: nowrap;
         }
         button:hover {
             background-color: #45a049;
@@ -46,13 +50,14 @@
         .add-coin {
             display: flex;
             gap: 10px;
+            flex-grow: 1;
         }
         input {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
-            flex-grow: 1;
             min-width: 100px;
+            flex-grow: 1;
         }
         table {
             width: 100%;
@@ -82,6 +87,19 @@
             color: #666;
             font-size: 0.8rem;
         }
+        .drag-handle {
+            cursor: move;
+            padding: 0 5px;
+            color: #666;
+        }
+        .remove-btn {
+            background-color: #f44336;
+            padding: 5px 8px;
+            font-size: 0.8rem;
+        }
+        .remove-btn:hover {
+            background-color: #d32f2f;
+        }
         @media (max-width: 600px) {
             th, td {
                 padding: 8px 5px;
@@ -89,6 +107,13 @@
             }
             .controls {
                 flex-direction: column;
+            }
+            .drag-handle {
+                padding: 0 3px;
+            }
+            .remove-btn {
+                padding: 3px 5px;
+                font-size: 0.7rem;
             }
         }
     </style>
@@ -110,6 +135,7 @@
         <table>
             <thead>
                 <tr>
+                    <th style="width: 30px;"></th>
                     <th>Coin</th>
                     <th>Current Price (USDT)</th>
                     <th>1 Week %</th>
@@ -153,6 +179,24 @@
             });
         }
 
+        // Initialize sortable table
+        function initSortable() {
+            new Sortable(priceTable, {
+                handle: '.drag-handle',
+                animation: 150,
+                onEnd: function() {
+                    const rows = priceTable.querySelectorAll('tr');
+                    const newOrder = [];
+                    rows.forEach(row => {
+                        const coin = row.getAttribute('data-coin');
+                        if (coin) newOrder.push(coin);
+                    });
+                    pairs = newOrder;
+                    saveCoins();
+                }
+            });
+        }
+
         // Fetch data for all coins
         async function fetchData() {
             priceTable.innerHTML = ''; // Clear table
@@ -172,21 +216,26 @@
                     const yearlyPct = ((latestPrice - yearlyLow) / yearlyLow * 100).toFixed(2);
                     
                     const row = document.createElement("tr");
+                    row.setAttribute('data-coin', pair);
                     row.innerHTML = `
+                        <td class="drag-handle">≡</td>
                         <td>${pair.replace("USDT", "/USDT")}</td>
                         <td>${formatPrice(latestPrice)}</td>
                         <td class="${weeklyPct >= 0 ? 'positive' : 'negative'}">${weeklyPct}%</td>
                         <td class="${monthlyPct >= 0 ? 'positive' : 'negative'}">${monthlyPct}%</td>
                         <td class="${yearlyPct >= 0 ? 'positive' : 'negative'}">${yearlyPct}%</td>
-                        <td><button class="remove-btn" data-coin="${pair}">Remove</button></td>
+                        <td><button class="remove-btn" data-coin="${pair}">X</button></td>
                     `;
                     priceTable.appendChild(row);
                 } catch (error) {
                     console.error(`Error fetching data for ${pair}:`, error);
                     const row = document.createElement("tr");
+                    row.setAttribute('data-coin', pair);
                     row.innerHTML = `
+                        <td class="drag-handle">≡</td>
                         <td>${pair.replace("USDT", "/USDT")}</td>
-                        <td colspan="5" style="color: red;">Error loading data</td>
+                        <td colspan="4" style="color: red;">Error loading data</td>
+                        <td><button class="remove-btn" data-coin="${pair}">X</button></td>
                     `;
                     priceTable.appendChild(row);
                 }
@@ -201,6 +250,9 @@
                     fetchData();
                 });
             });
+            
+            // Initialize sortable
+            initSortable();
             
             updateTime.textContent = new Date().toLocaleString();
         }
