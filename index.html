@@ -3,124 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Crypto Price Tracker</title>
+    <title>Kripto Fiyat Takipçisi</title>
+    <!-- Axios for API requests -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- SortableJS for drag-and-drop table rows -->
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* CSS Değişkenleri: Sayfanın genel renk paleti ve temel stilleri */
         :root {
-            --primary-color: #4361ee;
-            --danger-color: #f72585;
-            --success-color: #4cc9f0;
-            --warning-color: #ffbe0b;
-            --text-color: #2b2d42;
-            --bg-color: #f8f9fa;
-            --card-color: #ffffff;
-            --border-color: #dee2e6;
+            --primary-color: #3b82f6; /* Canlı bir mavi */
+            --danger-color: #ef4444; /* Yumuşak bir kırmızı */
+            --success-color: #22c55e; /* Canlı bir yeşil */
+            --warning-color: #f59e0b; /* Sıcak bir turuncu */
+            --text-color: #374151; /* Okunabilir koyu gri */
+            --bg-color: #f3f4f6; /* Açık gri arka plan */
+            --card-color: #ffffff; /* Beyaz kartlar */
+            --border-color: #e5e7eb; /* İnce kenarlık rengi */
+            --header-bg-color: #4b5563; /* Tablo başlığı için koyu gri */
+            --hover-bg-color: #f9fafb; /* Çok açık bir hover rengi */
         }
         
+        /* Genel Body Stilleri */
         body {
-            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; /* Modern font yığını */
             margin: 0;
-            padding: 15px;
+            padding: 20px; /* Daha fazla boşluk */
             background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.6;
+            -webkit-font-smoothing: antialiased; /* Fontların daha pürüzsüz görünmesi */
+            -moz-osx-font-smoothing: grayscale;
         }
         
+        /* Ana Konteyner Stilleri */
         .container {
-            max-width: 100%;
+            max-width: 1100px; /* Daha geniş maksimum genişlik */
             margin: 0 auto;
             background-color: var(--card-color);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            overflow-x: auto;
+            border-radius: 16px; /* Daha yuvarlak köşeler */
+            padding: 30px; /* İç boşluk */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); /* Daha belirgin gölge */
+            overflow-x: auto; /* Yatay kaydırma çubuğu gerektiğinde */
         }
         
+        /* Başlık Stilleri */
         h1 {
             color: var(--primary-color);
             text-align: center;
-            font-size: 1.8rem;
-            margin-bottom: 20px;
-            font-weight: 600;
+            font-size: 2.2rem; /* Daha büyük başlık */
+            margin-bottom: 30px; /* Başlık altı boşluk */
+            font-weight: 700; /* Daha kalın font */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 .fas {
+            color: #f59e0b; /* Başlık ikonuna vurgu rengi */
         }
         
+        /* Kontrol Alanı Stilleri (Yenileme, Ekleme, Ayarlar) */
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 15px; /* Öğeler arası boşluk */
+            margin-bottom: 25px;
             align-items: center;
+            justify-content: space-between; /* Öğeleri dağıtma */
         }
         
+        /* Buton Stilleri */
         button {
             background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 16px;
-            border-radius: 8px;
+            padding: 12px 20px; /* Daha geniş dolgu */
+            border-radius: 10px; /* Daha yuvarlak butonlar */
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1rem; /* Daha büyük font */
             white-space: nowrap;
-            font-weight: 500;
-            transition: all 0.2s ease;
+            font-weight: 600; /* Daha kalın font */
+            transition: all 0.2s ease; /* Yumuşak geçişler */
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px; /* İkon ile metin arası boşluk */
         }
         
         button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+            background-color: #2563eb; /* Hover durumunda daha koyu mavi */
+            transform: translateY(-2px); /* Hafif yukarı kalkma efekti */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
         
         button:active {
             transform: translateY(0);
+            box-shadow: none;
         }
         
+        /* Coin Ekleme Alanı Stilleri */
         .add-coin {
             display: flex;
             gap: 10px;
             flex-grow: 1;
-            min-width: 200px;
+            min-width: 250px; /* Giriş alanı için minimum genişlik */
         }
         
-        input {
-            padding: 10px 12px;
+        /* Giriş Alanı Stilleri (Metin ve Sayı) */
+        input[type="text"], input[type="number"] {
+            padding: 12px 15px;
             border: 1px solid var(--border-color);
-            border-radius: 8px;
+            border-radius: 10px;
             flex-grow: 1;
-            font-size: 0.95rem;
-            transition: border 0.2s ease;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            color: var(--text-color);
         }
         
         input:focus {
             outline: none;
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Odaklandığında belirgin halka */
         }
         
+        /* Tablo Stilleri */
         table {
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            margin-top: 20px;
-            font-size: 0.95rem;
+            margin-top: 25px;
+            font-size: 0.98rem;
+            border-radius: 12px;
+            overflow: hidden; /* Köşelerin uygulanmasını sağlar */
         }
         
         th, td {
             border-bottom: 1px solid var(--border-color);
-            padding: 12px 15px;
+            padding: 14px 18px; /* Hücre içi boşluk */
             text-align: left;
         }
         
         th {
-            background-color: var(--primary-color);
+            background-color: var(--header-bg-color);
             color: white;
-            font-weight: 500;
+            font-weight: 600;
             position: sticky;
             top: 0;
+            z-index: 10; /* Başlığın kaydırmada üstte kalmasını sağlar */
+        }
+
+        /* Sıralanabilir Başlık Stilleri */
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        th.sortable:hover {
+            background-color: #5a6471; /* Hover durumunda daha koyu */
+        }
+
+        th.sortable .sort-indicator {
+            margin-left: 8px;
+            font-size: 0.8em;
+            vertical-align: middle;
+            opacity: 0.6;
+        }
+
+        th.sortable.asc .sort-indicator {
+            opacity: 1;
+            transform: rotate(180deg);
+        }
+
+        th.sortable.desc .sort-indicator {
+            opacity: 1;
         }
         
         tr:not(:last-child) td {
@@ -128,66 +185,84 @@
         }
         
         tr:hover td {
-            background-color: rgba(0,0,0,0.02);
+            background-color: var(--hover-bg-color);
         }
         
+        /* Renk Kuralları (Mevcut haliyle bırakıldı) */
         .positive-high {
             color: var(--success-color);
-            font-weight: 500;
+            font-weight: 600;
         }
         
         .positive-low {
             color: var(--warning-color);
-            font-weight: 500;
+            font-weight: 600;
         }
         
         .negative {
             color: var(--danger-color);
-            font-weight: 500;
+            font-weight: 600;
         }
         
+        /* Güncelleme Zamanı Stilleri */
         .update-time {
             text-align: center;
-            margin: 15px 0;
-            color: #6c757d;
-            font-size: 0.85rem;
+            margin: 20px 0;
+            color: #6b7280;
+            font-size: 0.9rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
         }
         
+        /* Sürükleme Kolu Stilleri */
         .drag-handle {
-            cursor: move;
-            padding: 0 8px;
-            color: #adb5bd;
-            font-size: 1.1rem;
+            cursor: grab; /* Sürükleme imleci */
+            padding: 0 10px;
+            color: #9ca3af;
+            font-size: 1.2rem;
             text-align: center;
+            transition: color 0.2s ease;
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+            color: var(--primary-color);
         }
         
+        /* Eylem Butonları (Silme) Stilleri */
         .action-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 30px;
-            height: 30px;
+            width: 30px; /* Daha küçük buton */
+            height: 30px; /* Daha küçük buton */
             border-radius: 50%;
-            background-color: rgba(0,0,0,0.05);
+            background-color: var(--danger-color); /* Butonun arka planını kırmızı yapar */
             border: none;
-            color: var(--text-color);
+            color: white; /* Buton metnini beyaz yapar */
             cursor: pointer;
             transition: all 0.2s ease;
+            font-size: 0.9rem; /* İkon boyutunu küçült */
         }
         
         .action-btn:hover {
-            background-color: rgba(0,0,0,0.1);
+            background-color: #dc2626; /* Hover'da daha koyu kırmızı */
+            transform: translateY(-1px); /* Hafif yukarı kalkma efekti */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
+
+        .action-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* Yükleme İkonu Stilleri */
         .loading {
             display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid rgba(255,255,255,0.3);
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
@@ -197,57 +272,266 @@
             to { transform: rotate(360deg); }
         }
         
+        /* Bildirim Kutusu Stilleri */
         .notification {
             position: fixed;
-            bottom: 20px;
+            bottom: 25px;
             left: 50%;
             transform: translateX(-50%);
             background-color: var(--primary-color);
             color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 14px 25px;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
             z-index: 1000;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.4s ease, transform 0.4s ease;
         }
         
         .notification.show {
             opacity: 1;
+            transform: translateX(-50%) translateY(-5px); /* Hafif yukarı kalkma */
         }
         
+        /* Lejant Stilleri */
         .legend {
-            margin-top: 20px;
-            padding: 12px;
-            background-color: rgba(0,0,0,0.03);
-            border-radius: 8px;
-            font-size: 0.85rem;
-            border-left: 4px solid var(--primary-color);
+            margin-top: 30px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.02);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            border-left: 5px solid var(--primary-color);
+            color: #4b5563;
         }
         
         .legend-item {
             display: inline-flex;
             align-items: center;
-            margin-right: 15px;
-            margin-bottom: 5px;
+            margin-right: 20px;
+            margin-bottom: 8px;
         }
         
         .legend-color {
-            width: 12px;
-            height: 12px;
-            border-radius: 2px;
-            margin-right: 6px;
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        /* Ayarlar Paneli Stilleri (Modal) */
+        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1001;
+            display: none; /* Varsayılan olarak gizli */
+            flex-direction: column;
+            gap: 15px;
+            max-width: 90%;
+            width: 550px; /* Ayarlar paneli için daha geniş */
+            border: 1px solid var(--border-color);
+        }
+
+        .settings-panel.show {
+            display: flex;
+        }
+
+        .settings-panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        /* Ayar gruplarını yan yana getirme */
+        .settings-group {
+            display: flex;
+            gap: 20px; /* Gruplar arası boşluk */
+            flex-wrap: wrap; /* Küçük ekranlarda alt alta geçsin */
+            justify-content: center;
+        }
+
+        .settings-column {
+            flex: 1;
+            min-width: 250px; /* Her sütun için minimum genişlik */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item label {
+            font-weight: 500;
+            flex-shrink: 0; /* Label'ın küçülmesini engelle */
+            margin-right: 10px;
+        }
+
+        .settings-panel input[type="number"],
+        .settings-panel input[type="checkbox"],
+        .settings-panel input[type="text"] {
+            margin-left: auto; /* Girişleri sağa hizala */
+        }
+
+        .settings-panel input[type="number"] {
+            width: 80px;
+            text-align: center;
+        }
+        .settings-panel input[type="text"] {
+            width: 100px; /* Metin girişleri için daha geniş */
+        }
+
+        .settings-panel button {
+            width: auto;
+            align-self: flex-end;
+            margin-top: 20px;
+        }
+
+        .settings-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            color: var(--text-color);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: none;
+            transform: none; /* Genel buton dönüşümünü geçersiz kılar */
+        }
+        .settings-panel .close-btn:hover {
+            background-color: var(--border-color);
+            opacity: 1;
+        }
+
+        /* Modal için Arka Plan Karartma (Overlay) */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none;
+        }
+        #overlay.show {
+            display: block;
+        }
+
+        /* Coin Bilgi Paneli Stilleri */
+        .coin-info-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--card-color);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+            z-index: 1002; /* Ayarlar panelinden daha yüksek */
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 90%;
+            width: 500px;
+            border: 1px solid var(--primary-color);
+        }
+
+        .coin-info-panel.show {
+            display: flex;
+        }
+
+        .coin-info-panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .coin-info-panel .coin-description {
+            font-size: 1rem;
+            color: var(--text-color);
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .coin-info-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            color: var(--text-color);
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: none;
+            transform: none;
+        }
+        .coin-info-panel .close-btn:hover {
+            background-color: var(--border-color);
+            opacity: 1;
+        }
+
+        /* Coin Adı Hücresi - Tıklanabilir hale getirildi */
+        .coin-name-cell, .clickable-pct {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary-color); /* Yüzde hücreleri için de tıklanabilir stil */
+            transition: color 0.2s ease;
+        }
+        .coin-name-cell:hover, .clickable-pct:hover {
+            text-decoration: underline;
         }
         
+        /* Duyarlı Tasarım (Responsive Design) */
         @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
             .container {
-                padding: 15px;
-                border-radius: 0;
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: none;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
             }
             
             th, td {
                 padding: 10px 8px;
-                font-size: 0.85rem;
+                font-size: 0.8rem;
             }
             
             .drag-handle {
@@ -257,60 +541,91 @@
             
             .controls {
                 flex-direction: column;
+                align-items: stretch; /* Öğeleri tam genişliğe yayar */
             }
             
             .add-coin {
                 width: 100%;
                 min-width: unset;
+                flex-direction: column; /* Giriş ve butonu alt alta dizer */
             }
             
+            .add-coin input, .add-coin button {
+                width: 100%;
+            }
+
             button {
                 width: 100%;
                 justify-content: center;
+                padding: 10px 15px;
+                font-size: 0.9rem;
             }
             
             .legend-item {
                 display: flex;
                 margin-right: 0;
+                margin-bottom: 5px;
+            }
+
+            .settings-panel, .coin-info-panel {
+                width: 95%; /* Mobil için genişliği ayarlar */
+                padding: 20px;
+            }
+
+            .settings-group {
+                flex-direction: column; /* Mobil'de grupları alt alta dizer */
+            }
+            .settings-column {
+                min-width: unset;
+                width: 100%;
             }
         }
         
+        /* Sürükleme Hayaleti Stili */
         .sortable-ghost {
-            opacity: 0.5;
-            background: var(--bg-color);
+            opacity: 0.4;
+            background: var(--hover-bg-color);
+            border-radius: 8px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><i class="fas fa-coins"></i> Crypto Price Tracker</h1>
+        <h1><i class="fas fa-coins"></i> Kripto Fiyat Takipçisi</h1>
         
         <div class="controls">
             <button id="refreshBtn">
                 <span id="refreshIcon"><i class="fas fa-sync-alt"></i></span>
-                <span>Refresh Prices</span>
+                <span>Fiyatları Yenile</span>
             </button>
             <div class="add-coin">
-                <input type="text" id="newCoinInput" placeholder="Add coin (e.g. BTC)">
-                <button id="addCoinBtn"><i class="fas fa-plus"></i> Add</button>
+                <input type="text" id="newCoinInput" placeholder="Coin ekle (örn. BTC)">
+                <button id="addCoinBtn"><i class="fas fa-plus"></i> Ekle</button>
             </div>
+            <!-- Yeni ayarlar butonu -->
+            <button id="settingsBtn" title="Ayarlar"><i class="fas fa-cog"></i> Ayarlar</button>
         </div>
         
         <div class="update-time">
             <i class="far fa-clock"></i>
-            <span>Last updated: <span id="updateTime">Never</span></span>
+            <span>Son güncelleme: <span id="updateTime">Hiçbir zaman</span></span>
         </div>
         
         <table>
             <thead>
                 <tr>
-                    <th style="width: 40px;"></th>
-                    <th>Coin</th>
-                    <th>Price</th>
-                    <th>1W %</th>
-                    <th>1M %</th>
-                    <th>1Y %</th>
-                    <th style="width: 50px;">Action</th>
+                    <!-- Sıralamayı Sıfırla Butonu - Tablo başlığının en başına geldi -->
+                    <th style="width: 40px; text-align: center;">
+                        <button id="resetSortBtn" title="Sıralamayı Sıfırla" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: white; font-size: 1.2rem;">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </th>
+                    <th class="sortable" data-sort-key="pair">Coin <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="latestPrice">Fiyat <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="weeklyPct" id="th-weekly">1H % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="monthlyPct" id="th-monthly">1A % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="yearlyPct" id="th-yearly">1Y % <span class="sort-indicator"></span></th>
+                    <th style="width: 50px;">Sil</th>
                 </tr>
             </thead>
             <tbody id="priceTable">
@@ -318,18 +633,111 @@
         </table>
         
         <div class="legend">
-            <strong>Color Rules:</strong>
-            <div class="legend-item"><span class="legend-color" style="background: var(--success-color);"></span> 1W: >+5% | 1M: >+10% | 1Y: >+20%</div>
-            <div class="legend-item"><span class="legend-color" style="background: var(--warning-color);"></span> 1W: +0% to +5% | 1M: +0% to +10% | 1Y: +0% to +20%</div>
-            <div class="legend-item"><span class="legend-color" style="background: var(--danger-color);"></span> Any negative value</div>
+            <strong>Renk Kuralları:</strong>
+            <div class="legend-item" id="legend-high"><span class="legend-color" style="background: var(--success-color);"></span> 1H: >+%5 | 1A: >+%5 | 1Y: >+%5</div>
+            <div class="legend-item" id="legend-low"><span class="legend-color" style="background: var(--warning-color);"></span> 1H: %0 - +%5 | 1A: %0 - +%5 | 1Y: %0 - +%5</div>
+            <div class="legend-item" id="legend-negative"><span class="legend-color" style="background: var(--danger-color);"></span> Herhangi bir negatif değer</div>
         </div>
     </div>
     
     <div class="notification" id="notification"></div>
 
+    <!-- Ayarlar Paneli (Modal) -->
+    <div id="settingsPanel" class="settings-panel">
+        <h3>Ayarlar</h3>
+        <div class="setting-item">
+            <label for="autoRefreshToggle">Otomatik Yenilemeyi Etkinleştir:</label>
+            <input type="checkbox" id="autoRefreshToggle">
+        </div>
+        <div class="setting-item">
+            <label for="refreshInterval">Yenileme Aralığı (saniye):</label>
+            <input type="number" id="refreshInterval" value="120" min="10" step="10">
+        </div>
+        <hr style="border-color: var(--border-color); margin: 15px 0;">
+        
+        <div class="settings-group">
+            <div class="settings-column">
+                <h3>Zaman Aralığı Ayarları</h3>
+                <div class="setting-item">
+                    <label for="weeklyIntervalDays">1H Değişim (Gün):</label>
+                    <input type="number" id="weeklyIntervalDays" value="7" min="1" step="1">
+                </div>
+                <div class="setting-item">
+                    <label for="monthlyIntervalDays">1A Değişim (Gün):</label>
+                    <input type="number" id="monthlyIntervalDays" value="30" min="1" step="1">
+                </div>
+                <div class="setting-item">
+                    <label for="yearlyIntervalDays">1Y Değişim (Gün):</label>
+                    <input type="number" id="yearlyIntervalDays" value="365" min="1" step="1">
+                </div>
+            </div>
+
+            <div class="settings-column">
+                <h3>Kolon Adı Ayarları</h3>
+                <div class="setting-item">
+                    <label for="colNameWeekly">1H Kolon Adı:</label>
+                    <input type="text" id="colNameWeekly" value="1H %">
+                </div>
+                <div class="setting-item">
+                    <label for="colNameMonthly">1A Kolon Adı:</label>
+                    <input type="text" id="colNameMonthly" value="1A %">
+                </div>
+                <div class="setting-item">
+                    <label for="colNameYearly">1Y Kolon Adı:</label>
+                    <input type="text" id="colNameYearly" value="1Y %">
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-color: var(--border-color); margin: 15px 0;">
+        <div class="settings-group">
+            <div class="settings-column">
+                <h3>Renk Kuralı Ayarları</h3>
+                <div class="setting-item">
+                    <label for="positiveThreshold">Pozitif Eşik (%) :</label>
+                    <input type="number" id="positiveThreshold" value="5" min="0" step="1">
+                </div>
+                <div class="setting-item">
+                    <label for="highPctColor">Yüksek Pozitif Renk:</label>
+                    <input type="color" id="highPctColor" value="#22c55e">
+                </div>
+                <div class="setting-item">
+                    <label for="lowPctColor">Düşük Pozitif Renk:</label>
+                    <input type="color" id="lowPctColor" value="#f59e0b">
+                </div>
+                <div class="setting-item">
+                    <label for="negativePctColor">Negatif Renk:</label>
+                    <input type="color" id="negativePctColor" value="#ef4444">
+                </div>
+            </div>
+        </div>
+
+        <button id="saveSettingsBtn">Ayarları Kaydet</button>
+        <button id="closeSettingsBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Coin Bilgi Paneli (Gemini API Destekli) -->
+    <div id="coinInfoPanel" class="coin-info-panel">
+        <h3 id="coinInfoTitle">✨ Coin Bilgisi</h3>
+        <p id="coinDescription" class="coin-description">Yükleniyor...</p>
+        <button id="closeCoinInfoBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- En Düşük Fiyat Bilgisi Paneli -->
+    <div id="lowestPriceInfoPanel" class="coin-info-panel">
+        <h3 id="lowestPriceInfoTitle">En Düşük Fiyat Bilgisi</h3>
+        <p id="lowestPriceDetails" class="coin-description"></p>
+        <button id="closeLowestPriceInfoBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Modal Arka Planı -->
+    <div id="overlay" class="overlay"></div>
+
     <script>
-        // Default coins
-        let pairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+        // DOM Element Referansları
+        let pairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]; // Varsayılan coinler
+        let allCoinData = []; // Tüm coin verilerini sıralama için saklar
+
         const updateTime = document.getElementById("updateTime");
         const priceTable = document.getElementById("priceTable");
         const refreshBtn = document.getElementById("refreshBtn");
@@ -337,8 +745,76 @@
         const newCoinInput = document.getElementById("newCoinInput");
         const refreshIcon = document.getElementById("refreshIcon");
         const notification = document.getElementById("notification");
+        const resetSortBtn = document.getElementById("resetSortBtn"); // Yeni buton
 
-        // Load saved coins from localStorage
+        // Ayarlar paneli elementleri
+        const settingsBtn = document.getElementById("settingsBtn");
+        const settingsPanel = document.getElementById("settingsPanel");
+        const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+        const autoRefreshToggle = document.getElementById("autoRefreshToggle");
+        const refreshIntervalInput = document.getElementById("refreshInterval");
+        const weeklyIntervalDaysInput = document.getElementById("weeklyIntervalDays");
+        const monthlyIntervalDaysInput = document.getElementById("monthlyIntervalDays");
+        const yearlyIntervalDaysInput = document.getElementById("yearlyIntervalDays");
+        const colNameWeeklyInput = document.getElementById("colNameWeekly"); // Yeni kolon adı inputu
+        const colNameMonthlyInput = document.getElementById("colNameMonthly"); // Yeni kolon adı inputu
+        const colNameYearlyInput = document.getElementById("colNameYearly"); // Yeni kolon adı inputu
+        const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+        const overlay = document.getElementById("overlay");
+
+        // Coin bilgi paneli elementleri
+        const coinInfoPanel = document.getElementById("coinInfoPanel");
+        const coinInfoTitle = document.getElementById("coinInfoTitle");
+        const coinDescription = document.getElementById("coinDescription");
+        const closeCoinInfoBtn = document.getElementById("closeCoinInfoBtn");
+
+        // En düşük fiyat bilgi paneli elementleri
+        const lowestPriceInfoPanel = document.getElementById("lowestPriceInfoPanel");
+        const lowestPriceInfoTitle = document.getElementById("lowestPriceInfoTitle");
+        const lowestPriceDetails = document.getElementById("lowestPriceDetails");
+        const closeLowestPriceInfoBtn = document.getElementById("closeLowestPriceInfoBtn");
+
+        // Tablo başlık elementleri
+        const thWeekly = document.getElementById("th-weekly");
+        const thMonthly = document.getElementById("th-monthly");
+        const thYearly = document.getElementById("th-yearly");
+
+        // Renk kuralı ayarları elementleri
+        const positiveThresholdInput = document.getElementById("positiveThreshold");
+        const highPctColorInput = document.getElementById("highPctColor");
+        const lowPctColorInput = document.getElementById("lowPctColor");
+        const negativePctColorInput = document.getElementById("negativePctColor");
+
+        let autoRefreshTimer; // Otomatik yenileme zamanlayıcısını tutar
+        let currentRefreshInterval = 120000; // Varsayılan 2 dakika (ms cinsinden)
+
+        let currentSortColumn = 'pair'; // Varsayılan sıralama sütunu
+        let currentSortOrder = 'asc'; // Varsayılan sıralama yönü
+
+        // Zaman aralığı ayarları
+        let customIntervals = {
+            weekly: 7,
+            monthly: 30,
+            yearly: 365
+        };
+
+        // Kolon adı ayarları
+        let customColumnNames = {
+            weekly: "1H %",
+            monthly: "1A %",
+            yearly: "1Y %"
+        };
+
+        // Dinamik renk kuralı ayarları
+        let dynamicColorRules = {
+            positiveThreshold: 5, // Yüksek pozitif ve düşük pozitif arasındaki eşik
+            highColor: '#22c55e',
+            lowColor: '#f59e0b',
+            negativeColor: '#ef4444'
+        };
+
+
+        // localStorage'dan kaydedilmiş coinleri yükle
         function loadSavedCoins() {
             const savedCoins = localStorage.getItem('crypto-tracker-coins');
             if (savedCoins) {
@@ -346,12 +822,12 @@
             }
         }
 
-        // Save coins to localStorage
+        // localStorage'a coinleri kaydet
         function saveCoins() {
             localStorage.setItem('crypto-tracker-coins', JSON.stringify(pairs));
         }
 
-        // Show notification
+        // Bildirim göster
         function showNotification(message, isSuccess = true) {
             notification.textContent = message;
             notification.style.backgroundColor = isSuccess ? 'var(--primary-color)' : 'var(--danger-color)';
@@ -361,9 +837,10 @@
             }, 3000);
         }
 
-        // Format price
+        // Fiyatı biçimlendir
         function formatPrice(price) {
             const num = parseFloat(price);
+            if (isNaN(num)) return 'N/A'; // Geçersiz sayı kontrolü
             if (num < 1) {
                 return num.toFixed(6);
             } else if (num < 10) {
@@ -375,7 +852,7 @@
             }
         }
 
-        // Initialize sortable table
+        // Sıralanabilir tabloyu başlat
         function initSortable() {
             new Sortable(priceTable, {
                 handle: '.drag-handle',
@@ -394,28 +871,66 @@
                     });
                     pairs = newOrder;
                     saveCoins();
-                    showNotification('Coin order updated!');
+                    showNotification('Coin sırası güncellendi!');
                 }
             });
         }
 
-        // Fetch data for a single coin
+        // Tek bir coin için veri çek
         async function fetchCoinData(pair) {
             try {
-                const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&limit=365`);
+                // Binance API'den kullanıcının belirlediği en uzun aralık kadar veriyi çek
+                const limitDays = Math.max(customIntervals.weekly, customIntervals.monthly, customIntervals.yearly);
+                const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&limit=${limitDays}`);
                 const data = response.data;
                 
-                const latestPrice = parseFloat(data[data.length - 1][4]);
-                const weeklyLow = Math.min(...data.slice(-7).map(d => parseFloat(d[3])));
-                const monthlyLow = Math.min(...data.slice(-30).map(d => parseFloat(d[3])));
-                const yearlyLow = Math.min(...data.map(d => parseFloat(d[3])));
+                // Eğer veri yoksa veya yetersizse hata döndür
+                if (!data || data.length === 0) {
+                    throw new Error("Yeterli veri bulunamadı.");
+                }
+
+                const latestPrice = parseFloat(data[data.length - 1][4]); // Kapanış fiyatı
+                
+                // Haftalık, Aylık ve Yıllık yüzde değişimlerini hesapla
+                // slice ile kullanıcı ayarına göre doğru aralığı al
+                const calculatePercentageChange = (days, historicalData) => {
+                    if (historicalData.length < days) return { pct: 'N/A', lowestPrice: 'N/A', lowestPriceDate: 'N/A' };
+                    const periodData = historicalData.slice(-days);
+                    let lowestPriceInPeriod = Infinity;
+                    let lowestPriceDate = 'N/A';
+
+                    periodData.forEach(d => {
+                        const low = parseFloat(d[3]); // Düşük fiyat
+                        const openTime = new Date(d[0]).toLocaleDateString(); // Açılış zamanı
+
+                        if (low < lowestPriceInPeriod) {
+                            lowestPriceInPeriod = low;
+                            lowestPriceDate = openTime;
+                        }
+                    });
+                    
+                    if (lowestPriceInPeriod === 0 || lowestPriceInPeriod === Infinity) return { pct: 'N/A', lowestPrice: 'N/A', lowestPriceDate: 'N/A' };
+                    
+                    const pct = ((latestPrice - lowestPriceInPeriod) / lowestPriceInPeriod * 100).toFixed(2);
+                    return { pct, lowestPrice: lowestPriceInPeriod.toFixed(6), lowestPriceDate }; // Return an object
+                };
+
+                const weeklyData = calculatePercentageChange(customIntervals.weekly, data);
+                const monthlyData = calculatePercentageChange(customIntervals.monthly, data);
+                const yearlyData = calculatePercentageChange(customIntervals.yearly, data);
                 
                 return {
                     pair,
                     latestPrice,
-                    weeklyPct: ((latestPrice - weeklyLow) / weeklyLow * 100).toFixed(2),
-                    monthlyPct: ((latestPrice - monthlyLow) / monthlyLow * 100).toFixed(2),
-                    yearlyPct: ((latestPrice - yearlyLow) / yearlyLow * 100).toFixed(2),
+                    weeklyPct: weeklyData.pct,
+                    weeklyLowestPrice: weeklyData.lowestPrice,
+                    weeklyLowestPriceDate: weeklyData.lowestPriceDate,
+                    monthlyPct: monthlyData.pct,
+                    monthlyLowestPrice: monthlyData.lowestPrice,
+                    monthlyLowestPriceDate: monthlyData.lowestPriceDate,
+                    yearlyPct: yearlyData.pct,
+                    yearlyLowestPrice: yearlyData.lowestPrice,
+                    yearlyLowestPriceDate: yearlyData.lowestPriceDate,
                     error: null
                 };
             } catch (error) {
@@ -424,22 +939,45 @@
                     pair,
                     latestPrice: null,
                     weeklyPct: null,
+                    weeklyLowestPrice: null,
+                    weeklyLowestPriceDate: null,
                     monthlyPct: null,
+                    monthlyLowestPrice: null,
+                    monthlyLowestPriceDate: null,
                     yearlyPct: null,
+                    yearlyLowestPrice: null,
+                    yearlyLowestPriceDate: null,
                     error: error.message
                 };
             }
         }
 
-        // Fetch data for all coins
+        // Tüm coinler için veri çek ve tabloyu güncelle
         async function fetchData() {
-            refreshIcon.innerHTML = '<div class="loading"></div>';
-            priceTable.innerHTML = '';
+            refreshIcon.innerHTML = '<div class="loading"></div>'; // Yükleme animasyonu göster
+            priceTable.innerHTML = ''; // Tabloyu temizle
             
             const promises = pairs.map(pair => fetchCoinData(pair));
-            const results = await Promise.all(promises);
+            allCoinData = await Promise.all(promises); // Tüm coin verilerini paralel çek ve sakla
             
-            results.forEach(result => {
+            // Veriyi mevcut sıralama ayarına göre sırala
+            sortData(currentSortColumn, currentSortOrder, false); // Tabloyu yeniden çizmeden sırala
+            
+            updateTime.textContent = new Date().toLocaleString(); // Son güncelleme zamanını göster
+            refreshIcon.innerHTML = '<i class="fas fa-sync-alt"></i>'; // Yükleme animasyonunu kaldır
+            showNotification('Fiyatlar başarıyla güncellendi!');
+        }
+
+        // Tabloyu verilen veriye göre render et
+        function renderTable(dataToRender) {
+            priceTable.innerHTML = ''; // Tabloyu temizle
+
+            // Kolon başlıklarını güncelle
+            thWeekly.innerHTML = `${customColumnNames.weekly} <span class="sort-indicator"></span>`;
+            thMonthly.innerHTML = `${customColumnNames.monthly} <span class="sort-indicator"></span>`;
+            thYearly.innerHTML = `${customColumnNames.yearly} <span class="sort-indicator"></span>`;
+            
+            dataToRender.forEach(result => {
                 const row = document.createElement("tr");
                 row.setAttribute('data-coin', result.pair);
                 
@@ -447,100 +985,402 @@
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
                         <td>${result.pair.replace("USDT", "/USDT")}</td>
-                        <td colspan="4" style="color: var(--danger-color);">Error: ${result.error}</td>
-                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove"><i class="fas fa-times"></i></button></td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Kaldır"><i class="fas fa-times"></i></button></td>
                     `;
                 } else {
-                    // Apply color rules
-                    const weeklyClass = result.weeklyPct < 0 ? 'negative' : 
-                                     result.weeklyPct < 5 ? 'positive-low' : 'positive-high';
-                    
-                    const monthlyClass = result.monthlyPct < 0 ? 'negative' : 
-                                       result.monthlyPct < 10 ? 'positive-low' : 'positive-high';
-                    
-                    const yearlyClass = result.yearlyPct < 0 ? 'negative' : 
-                                      result.yearlyPct < 20 ? 'positive-low' : 'positive-high';
+                    // Renk kurallarını uygula
+                    let weeklyColorStyle = '';
+                    if (parseFloat(result.weeklyPct) < 0) {
+                        weeklyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.weeklyPct) >= dynamicColorRules.positiveThreshold) {
+                        weeklyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else { // >= 0 and < positiveThreshold
+                        weeklyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
+
+                    let monthlyColorStyle = '';
+                    if (parseFloat(result.monthlyPct) < 0) {
+                        monthlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.monthlyPct) >= dynamicColorRules.positiveThreshold) {
+                        monthlyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else {
+                        monthlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
+
+                    let yearlyColorStyle = '';
+                    if (parseFloat(result.yearlyPct) < 0) {
+                        yearlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.yearlyPct) >= dynamicColorRules.positiveThreshold) {
+                        yearlyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else {
+                        yearlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
                     
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
-                        <td>${result.pair.replace("USDT", "/USDT")}</td>
+                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "/USDT")}</td>
                         <td>${formatPrice(result.latestPrice)}</td>
-                        <td class="${weeklyClass}">${result.weeklyPct}%</td>
-                        <td class="${monthlyClass}">${result.monthlyPct}%</td>
-                        <td class="${yearlyClass}">${result.yearlyPct}%</td>
-                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove"><i class="fas fa-times"></i></button></td>
+                        <td style="${weeklyColorStyle}" class="clickable-pct" data-period="weekly" data-coin="${result.pair}" data-lowest-price="${result.weeklyLowestPrice}" data-lowest-price-date="${result.weeklyLowestPriceDate}">${result.weeklyPct}%</td>
+                        <td style="${monthlyColorStyle}" class="clickable-pct" data-period="monthly" data-coin="${result.pair}" data-lowest-price="${result.monthlyLowestPrice}" data-lowest-price-date="${result.monthlyLowestPriceDate}">${result.monthlyPct}%</td>
+                        <td style="${yearlyColorStyle}" class="clickable-pct" data-period="yearly" data-coin="${result.pair}" data-lowest-price="${result.yearlyLowestPrice}" data-lowest-price-date="${result.yearlyLowestPriceDate}">${result.yearlyPct}%</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Kaldır"><i class="fas fa-times"></i></button></td>
                     `;
                 }
                 
                 priceTable.appendChild(row);
             });
             
-            // Add event listeners to remove buttons
+            // Kaldır butonlarına olay dinleyicileri ekle
             document.querySelectorAll('.remove-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     const coinToRemove = this.getAttribute('data-coin');
                     pairs = pairs.filter(coin => coin !== coinToRemove);
-                    saveCoins();
-                    fetchData();
-                    showNotification(`${coinToRemove.replace("USDT", "")} removed`);
+                    saveCoins(); // Coin listesini kaydet
+                    fetchData(); // Tabloyu yeniden çiz
+                    showNotification(`${coinToRemove.replace("USDT", "")} kaldırıldı`);
+                });
+            });
+
+            // Coin adı hücrelerine tıklama olay dinleyicileri ekle (Gemini API için)
+            document.querySelectorAll('.coin-name-cell').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const coinSymbol = this.getAttribute('data-coin');
+                    getSparkleCoinInfo(coinSymbol);
+                });
+            });
+
+            // Yüzde değişim hücrelerine tıklama olay dinleyicileri ekle
+            document.querySelectorAll('.clickable-pct').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const coin = this.getAttribute('data-coin').replace('USDT', '');
+                    const period = this.getAttribute('data-period');
+                    const lowestPrice = this.getAttribute('data-lowest-price');
+                    const lowestPriceDate = this.getAttribute('data-lowest-price-date');
+                    showLowestPriceInfo(coin, period, lowestPrice, lowestPriceDate);
                 });
             });
             
-            // Initialize sortable
+            // Sıralanabilir özelliği yeniden başlat
             initSortable();
-            
-            updateTime.textContent = new Date().toLocaleString();
-            refreshIcon.innerHTML = '<i class="fas fa-sync-alt"></i>';
-            showNotification('Prices updated successfully!');
+            updateTableHeaders(); // Sıralama oklarını güncelle
+            updateLegend(); // Lejantı güncelle
         }
 
-        // Add new coin
+        // Yeni coin ekle
         async function addNewCoin() {
             const newCoin = newCoinInput.value.trim().toUpperCase();
-            if (!newCoin) return;
+            if (!newCoin) {
+                showNotification('Lütfen bir coin sembolü girin!', false);
+                return;
+            }
             
             const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
             
             if (pairs.includes(fullPair)) {
-                showNotification('This coin is already in the list!', false);
+                showNotification('Bu coin zaten listede var!', false);
                 return;
             }
             
-            // Check if coin exists by fetching data
-            addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Checking...';
+            // Coin'in varlığını kontrol et
+            addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Kontrol Ediliyor...';
             
             try {
                 const response = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${fullPair}`);
                 if (response.data.symbol) {
                     pairs.push(fullPair);
-                    saveCoins();
-                    fetchData();
+                    saveCoins(); // Yeni coini kaydet
+                    fetchData(); // Tabloyu güncelle
                     newCoinInput.value = '';
-                    showNotification(`${fullPair.replace("USDT", "")} added successfully!`);
+                    showNotification(`${fullPair.replace("USDT", "")} başarıyla eklendi!`);
                 }
             } catch (error) {
-                showNotification('Invalid coin symbol!', false);
-                console.error('Error adding coin:', error);
+                showNotification('Geçersiz coin sembolü!', false);
+                console.error('Coin eklenirken hata:', error);
             } finally {
-                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> Add';
+                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> Ekle';
             }
         }
 
-        // Event listeners
-        refreshBtn.addEventListener('click', fetchData);
-        addCoinBtn.addEventListener('click', addNewCoin);
-        newCoinInput.addEventListener('keypress', function(e) {
+        // Tabloyu sırala
+        function sortData(columnKey, order, toggle = true) {
+            if (toggle) {
+                if (currentSortColumn === columnKey) {
+                    currentSortOrder = (currentSortOrder === 'asc' ? 'desc' : 'asc');
+                } else {
+                    currentSortColumn = columnKey;
+                    currentSortOrder = 'asc';
+                }
+            } else {
+                currentSortColumn = columnKey;
+                currentSortOrder = order;
+            }
+
+            allCoinData.sort((a, b) => {
+                let valA = a[columnKey];
+                let valB = b[columnKey];
+
+                // Sayısal değerler için parseFloat kullan
+                if (columnKey !== 'pair') {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                    // 'N/A' değerlerini sıralama için en sona at
+                    if (isNaN(valA) && isNaN(valB)) return 0;
+                    if (isNaN(valA)) return 1;
+                    if (isNaN(valB)) return -1;
+                }
+
+                if (valA < valB) {
+                    return currentSortOrder === 'asc' ? -1 : 1;
+                }
+                if (valA > valB) {
+                    return currentSortOrder === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+            renderTable(allCoinData);
+        }
+
+        // Tablo başlıklarındaki sıralama oklarını güncelle
+        function updateTableHeaders() {
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.classList.remove('asc', 'desc');
+                let indicator = header.querySelector('.sort-indicator');
+                // indicator zaten renderTable içinde oluşturulduğu için burada sadece güncelliyoruz
+                if (header.getAttribute('data-sort-key') === currentSortColumn) {
+                    header.classList.add(currentSortOrder);
+                    indicator.innerHTML = currentSortOrder === 'asc' ? '&#9650;' : '&#9660;'; // Yukarı/aşağı ok
+                } else {
+                    indicator.innerHTML = ''; // Diğer başlıkların oklarını temizle
+                }
+            });
+        }
+
+        // localStorage'dan ayarları yükle
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('crypto-tracker-settings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                autoRefreshToggle.checked = settings.autoRefreshEnabled;
+                refreshIntervalInput.value = settings.refreshInterval / 1000;
+                currentRefreshInterval = settings.refreshInterval;
+
+                // Özel zaman aralıklarını yükle
+                customIntervals.weekly = settings.customIntervals?.weekly || 7;
+                customIntervals.monthly = settings.customIntervals?.monthly || 30;
+                customIntervals.yearly = settings.customIntervals?.yearly || 365;
+
+                weeklyIntervalDaysInput.value = customIntervals.weekly;
+                monthlyIntervalDaysInput.value = customIntervals.monthly;
+                yearlyIntervalDaysInput.value = customIntervals.yearly;
+
+                // Özel kolon adlarını yükle
+                customColumnNames.weekly = settings.customColumnNames?.weekly || "1H %";
+                customColumnNames.monthly = settings.customColumnNames?.monthly || "1A %";
+                customColumnNames.yearly = settings.customColumnNames?.yearly || "1Y %";
+
+                colNameWeeklyInput.value = customColumnNames.weekly;
+                colNameMonthlyInput.value = customColumnNames.monthly;
+                colNameYearlyInput.value = customColumnNames.yearly;
+
+                // Dinamik renk kurallarını yükle
+                dynamicColorRules.positiveThreshold = settings.dynamicColorRules?.positiveThreshold || 5;
+                dynamicColorRules.highColor = settings.dynamicColorRules?.highColor || '#22c55e';
+                dynamicColorRules.lowColor = settings.dynamicColorRules?.lowColor || '#f59e0b';
+                dynamicColorRules.negativeColor = settings.dynamicColorRules?.negativeColor || '#ef4444';
+
+                positiveThresholdInput.value = dynamicColorRules.positiveThreshold;
+                highPctColorInput.value = dynamicColorRules.highColor;
+                lowPctColorInput.value = dynamicColorRules.lowColor;
+                negativePctColorInput.value = dynamicColorRules.negativeColor;
+            }
+            toggleAutoRefresh(autoRefreshToggle.checked);
+        }
+
+        // localStorage'a ayarları kaydet
+        function saveSettings() {
+            const settings = {
+                autoRefreshEnabled: autoRefreshToggle.checked,
+                refreshInterval: parseInt(refreshIntervalInput.value) * 1000,
+                customIntervals: {
+                    weekly: parseInt(weeklyIntervalDaysInput.value),
+                    monthly: parseInt(monthlyIntervalDaysInput.value),
+                    yearly: parseInt(yearlyIntervalDaysInput.value)
+                },
+                customColumnNames: {
+                    weekly: colNameWeeklyInput.value,
+                    monthly: colNameMonthlyInput.value,
+                    yearly: colNameYearlyInput.value
+                },
+                dynamicColorRules: {
+                    positiveThreshold: parseInt(positiveThresholdInput.value),
+                    highColor: highPctColorInput.value,
+                    lowColor: lowPctColorInput.value,
+                    negativeColor: negativePctColorInput.value
+                }
+            };
+            localStorage.setItem('crypto-tracker-settings', JSON.stringify(settings));
+            currentRefreshInterval = settings.refreshInterval;
+            customIntervals = settings.customIntervals; // Güncel aralık ayarlarını uygula
+            customColumnNames = settings.customColumnNames; // Güncel kolon adı ayarlarını uygula
+            dynamicColorRules = settings.dynamicColorRules; // Güncel renk kuralı ayarlarını uygula
+            
+            toggleAutoRefresh(settings.autoRefreshEnabled); // Yeni otomatik yenileme ayarlarını hemen uygula
+            showNotification('Ayarlar kaydedildi!');
+            settingsPanel.classList.remove('show');
+            overlay.classList.remove('show');
+            fetchData(); // Ayarlar değiştiğinde veriyi yeniden çek
+        }
+
+        // Otomatik yenilemeyi aç/kapa
+        function toggleAutoRefresh(enable) {
+            clearInterval(autoRefreshTimer); // Mevcut zamanlayıcıyı temizle
+            if (enable) {
+                autoRefreshTimer = setInterval(fetchData, currentRefreshInterval);
+            }
+        }
+
+        // Sıralamayı sıfırla
+        function resetSort() {
+            currentSortColumn = 'pair'; // Sıralama sütununu varsayılana ayarla
+            currentSortOrder = 'asc'; // Sıralama yönünü varsayılana ayarla
+            fetchData(); // Veriyi yeniden çek ve varsayılan sıraya göre render et
+            showNotification('Sıralama sıfırlandı!');
+        }
+
+        // En düşük fiyat bilgisi panelini göster
+        function showLowestPriceInfo(coin, period, lowestPrice, lowestPriceDate) {
+            let periodText = '';
+            if (period === 'weekly') periodText = customColumnNames.weekly;
+            else if (period === 'monthly') periodText = customColumnNames.monthly;
+            else if (period === 'yearly') periodText = customColumnNames.yearly;
+
+            lowestPriceInfoTitle.innerHTML = `📉 ${coin} - ${periodText} En Düşük Fiyat`;
+            
+            if (lowestPrice === 'N/A' || lowestPriceDate === 'N/A') {
+                lowestPriceDetails.textContent = `Bu dönem için en düşük fiyat bilgisi mevcut değil.`;
+            } else {
+                lowestPriceDetails.innerHTML = `
+                    <p><strong>En Düşük Fiyat:</strong> ${formatPrice(lowestPrice)} USDT</p>
+                    <p><strong>Tarih:</strong> ${lowestPriceDate}</p>
+                `;
+            }
+            
+            lowestPriceInfoPanel.classList.add('show');
+            overlay.classList.add('show');
+        }
+
+        // Lejantı dinamik olarak güncelle
+        function updateLegend() {
+            const legendHigh = document.getElementById('legend-high');
+            const legendLow = document.getElementById('legend-low');
+            const legendNegative = document.getElementById('legend-negative');
+
+            legendHigh.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.highColor};"></span> ${customColumnNames.weekly}: >+${dynamicColorRules.positiveThreshold}% | ${customColumnNames.monthly}: >+${dynamicColorRules.positiveThreshold}% | ${customColumnNames.yearly}: >+${dynamicColorRules.positiveThreshold}%`;
+            legendLow.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.lowColor};"></span> ${customColumnNames.weekly}: %0 - +${dynamicColorRules.positiveThreshold}% | ${customColumnNames.monthly}: %0 - +${dynamicColorRules.positiveThreshold}% | ${customColumnNames.yearly}: %0 - +${dynamicColorRules.positiveThreshold}%`;
+            legendNegative.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.negativeColor};"></span> Herhangi bir negatif değer`;
+        }
+
+        // ✨ Gemini API ile coin bilgisi çekme
+        async function getSparkleCoinInfo(coinSymbol) {
+            coinInfoTitle.innerHTML = `✨ ${coinSymbol.replace('USDT', '')} Bilgisi`;
+            coinDescription.textContent = 'Bilgi yükleniyor...';
+            coinInfoPanel.classList.add('show');
+            overlay.classList.add('show');
+
+            const prompt = `Kripto para birimi ${coinSymbol.replace('USDT', '')} hakkında 3-4 cümlelik, kolay anlaşılır bir özet bilgi verin. Amacını ve temel özelliklerini açıklayın.`;
+            
+            let chatHistory = [];
+            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+            const payload = { contents: chatHistory };
+            const apiKey = ""; // Canvas ortamı otomatik sağlayacaktır
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.candidates && result.candidates.length > 0 &&
+                    result.candidates[0].content && result.candidates[0].content.parts &&
+                    result.candidates[0].content.parts.length > 0) {
+                    const text = result.candidates[0].content.parts[0].text;
+                    coinDescription.textContent = text;
+                } else {
+                    coinDescription.textContent = 'Bilgi alınamadı. Lütfen daha sonra tekrar deneyin.';
+                    console.error('Gemini API\'den beklenmedik yanıt yapısı:', result);
+                }
+            } catch (error) {
+                coinDescription.textContent = 'Bilgi çekilirken bir hata oluştu. İnternet bağlantınızı kontrol edin.';
+                console.error('Gemini API hatası:', error);
+            }
+        }
+
+        // Olay Dinleyicileri
+        refreshBtn.addEventListener('click', fetchData); // Yenile butonuna tıklama
+        addCoinBtn.addEventListener('click', addNewCoin); // Ekle butonuna tıklama
+        newCoinInput.addEventListener('keypress', function(e) { // Giriş alanında Enter tuşu
             if (e.key === 'Enter') {
                 addNewCoin();
             }
         });
+        resetSortBtn.addEventListener('click', resetSort); // Sıralamayı Sıfırla butonuna tıklama
 
-        // Initialize
-        loadSavedCoins();
-        fetchData();
+        // Ayarlar butonu olayları
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.add('show'); // Ayarlar panelini göster
+            overlay.classList.add('show'); // Arka planı karart
+        });
+
+        closeSettingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.remove('show'); // Ayarlar panelini gizle
+            overlay.classList.remove('show'); // Arka planı normale döndür
+        });
+
+        saveSettingsBtn.addEventListener('click', saveSettings); // Ayarları kaydet butonuna tıklama
+
+        // Coin bilgi paneli kapatma olayları
+        closeCoinInfoBtn.addEventListener('click', () => {
+            coinInfoPanel.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+
+        // En düşük fiyat bilgi paneli kapatma olayları
+        closeLowestPriceInfoBtn.addEventListener('click', () => {
+            lowestPriceInfoPanel.classList.remove('show');
+            overlay.classList.remove('show');
+        });
+
+        // Arka plana tıklayınca ayarlar veya bilgi panelini kapat
+        overlay.addEventListener('click', () => {
+            settingsPanel.classList.remove('show');
+            coinInfoPanel.classList.remove('show');
+            lowestPriceInfoPanel.classList.remove('show'); // Yeni panel eklendi
+            overlay.classList.remove('show');
+        });
+
+        // Tablo başlıklarına sıralama olay dinleyicileri ekle
+        document.querySelectorAll('th.sortable').forEach(header => {
+            header.addEventListener('click', function() {
+                const sortKey = this.getAttribute('data-sort-key');
+                if (sortKey) {
+                    sortData(sortKey, null, true); // Sıralama yap ve yönü değiştir
+                }
+            });
+        });
+
+        // Uygulamayı Başlat
+        loadSavedCoins(); // Kaydedilmiş coinleri yükle
+        loadSettings(); // Kaydedilmiş ayarları yükle
+        fetchData(); // İlk veri çekme
         
-        // Auto-refresh every 2 minutes
-        setInterval(fetchData, 120000);
+        // Önceki setInterval çağrısı kaldırıldı, artık toggleAutoRefresh() tarafından yönetiliyor.
     </script>
 </body>
 </html>
