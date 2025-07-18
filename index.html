@@ -235,15 +235,15 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 30px; /* Daha küçük buton */
-            height: 30px; /* Daha küçük buton */
+            width: 26px; /* Daha da küçük buton */
+            height: 26px; /* Daha da küçük buton */
             border-radius: 50%;
             background-color: var(--danger-color); /* Butonun arka planını kırmızı yapar */
             border: none;
             color: white; /* Buton metnini beyaz yapar */
             cursor: pointer;
             transition: all 0.2s ease;
-            font-size: 0.9rem; /* İkon boyutunu küçült */
+            font-size: 0.8rem; /* İkon boyutunu küçült */
         }
         
         .action-btn:hover {
@@ -333,7 +333,7 @@
             flex-direction: column;
             gap: 15px;
             max-width: 90%;
-            width: 550px; /* Ayarlar paneli için daha geniş */
+            width: 800px; /* Ayarlar paneli için daha geniş */
             border: 1px solid var(--border-color);
         }
 
@@ -358,7 +358,7 @@
 
         .settings-column {
             flex: 1;
-            min-width: 250px; /* Her sütun için minimum genişlik */
+            min-width: 200px; /* Her sütun için minimum genişlik */
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -384,7 +384,8 @@
 
         .settings-panel input[type="number"],
         .settings-panel input[type="checkbox"],
-        .settings-panel input[type="text"] {
+        .settings-panel input[type="text"],
+        .settings-panel input[type="color"] {
             margin-left: auto; /* Girişleri sağa hizala */
         }
 
@@ -394,6 +395,12 @@
         }
         .settings-panel input[type="text"] {
             width: 100px; /* Metin girişleri için daha geniş */
+        }
+        .settings-panel input[type="color"] {
+            width: 50px; /* Renk seçici için daha küçük */
+            height: 30px;
+            padding: 2px;
+            border-radius: 5px;
         }
 
         .settings-panel button {
@@ -422,6 +429,17 @@
         .settings-panel .close-btn:hover {
             background-color: var(--border-color);
             opacity: 1;
+        }
+
+        /* Bilgi ikonları için stil */
+        .info-icon {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-left: 5px;
+            cursor: help; /* Yardım imleci */
+        }
+        .info-icon:hover {
+            color: var(--primary-color);
         }
 
         /* Modal için Arka Plan Karartma (Overlay) */
@@ -512,6 +530,17 @@
         .coin-name-cell:hover, .clickable-pct:hover {
             text-decoration: underline;
         }
+
+        /* AI Bilgi Simgesi */
+        .ai-info-icon {
+            color: #f59e0b; /* Sarı renk */
+            margin-right: 5px;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .ai-info-icon:hover {
+            opacity: 0.8;
+        }
         
         /* Duyarlı Tasarım (Responsive Design) */
         @media (max-width: 768px) {
@@ -591,24 +620,24 @@
 </head>
 <body>
     <div class="container">
-        <h1><i class="fas fa-coins"></i> Kripto Fiyat Takipçisi</h1>
+        <h1 title="Kripto para fiyatlarını takip edin ve kişiselleştirilmiş ayarlarınızı yapın."><i class="fas fa-coins"></i> Kripto Fiyat Takipçisi</h1>
         
         <div class="controls">
-            <button id="refreshBtn">
+            <button id="refreshBtn" title="Tablodaki tüm coinlerin fiyatlarını ve yüzde değişimlerini günceller.">
                 <span id="refreshIcon"><i class="fas fa-sync-alt"></i></span>
                 <span>Fiyatları Yenile</span>
             </button>
             <div class="add-coin">
-                <input type="text" id="newCoinInput" placeholder="Coin ekle (örn. BTC)">
-                <button id="addCoinBtn"><i class="fas fa-plus"></i> Ekle</button>
+                <input type="text" id="newCoinInput" placeholder="Coin ekle (örn. BTC,ETH,SOL)" title="Yeni bir kripto para birimi eklemek için sembolünü girin (örn. BTC). Birden fazla coin eklemek için virgül kullanın (örn. JUV,ACM,PORTO).">
+                <button id="addCoinBtn" title="Girilen coin(leri) listeye ekler."><i class="fas fa-plus"></i> Ekle</button>
             </div>
             <!-- Yeni ayarlar butonu -->
-            <button id="settingsBtn" title="Ayarlar"><i class="fas fa-cog"></i> Ayarlar</button>
+            <button id="settingsBtn" title="Uygulama ayarlarını değiştirmek için tıklayın."><i class="fas fa-cog"></i> Ayarlar</button>
         </div>
         
         <div class="update-time">
             <i class="far fa-clock"></i>
-            <span>Son güncelleme: <span id="updateTime">Hiçbir zaman</span></span>
+            <span title="Fiyatların en son ne zaman güncellendiğini gösterir.">Son güncelleme: <span id="updateTime">Hiçbir zaman</span></span>
         </div>
         
         <table>
@@ -616,16 +645,16 @@
                 <tr>
                     <!-- Sıralamayı Sıfırla Butonu - Tablo başlığının en başına geldi -->
                     <th style="width: 40px; text-align: center;">
-                        <button id="resetSortBtn" title="Sıralamayı Sıfırla" style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: white; font-size: 1.2rem;">
+                        <button id="resetSortBtn" title="Tablo sıralamasını orijinal eklenme sırasına sıfırlar." style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: white; font-size: 1.2rem;">
                             <i class="fas fa-undo"></i>
                         </button>
                     </th>
-                    <th class="sortable" data-sort-key="pair">Coin <span class="sort-indicator"></span></th>
-                    <th class="sortable" data-sort-key="latestPrice">Fiyat <span class="sort-indicator"></span></th>
-                    <th class="sortable" data-sort-key="weeklyPct" id="th-weekly">1H % <span class="sort-indicator"></span></th>
-                    <th class="sortable" data-sort-key="monthlyPct" id="th-monthly">1A % <span class="sort-indicator"></span></th>
-                    <th class="sortable" data-sort-key="yearlyPct" id="th-yearly">1Y % <span class="sort-indicator"></span></th>
-                    <th style="width: 50px;">Sil</th>
+                    <th class="sortable" data-sort-key="pair" title="Coin sembolüne göre sıralar.">Coin <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="latestPrice" title="Güncel fiyata göre sıralar.">Fiyat <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="weeklyPct" id="th-weekly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1H % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="monthlyPct" id="th-monthly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1A % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="yearlyPct" id="th-yearly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1Y % <span class="sort-indicator"></span></th>
+                    <th style="width: 50px;" title="Coin'i listeden kaldırmak için tıklayın.">Sil</th>
                 </tr>
             </thead>
             <tbody id="priceTable">
@@ -646,11 +675,11 @@
     <div id="settingsPanel" class="settings-panel">
         <h3>Ayarlar</h3>
         <div class="setting-item">
-            <label for="autoRefreshToggle">Otomatik Yenilemeyi Etkinleştir:</label>
+            <label for="autoRefreshToggle">Otomatik Yenilemeyi Etkinleştir: <i class="fas fa-info-circle info-icon" title="Fiyatların otomatik olarak güncellenip güncellenmeyeceğini belirler."></i></label>
             <input type="checkbox" id="autoRefreshToggle">
         </div>
         <div class="setting-item">
-            <label for="refreshInterval">Yenileme Aralığı (saniye):</label>
+            <label for="refreshInterval">Yenileme Aralığı (saniye): <i class="fas fa-info-circle info-icon" title="Otomatik yenileme etkinse, fiyatların kaç saniyede bir güncelleneceğini belirler."></i></label>
             <input type="number" id="refreshInterval" value="120" min="10" step="10">
         </div>
         <hr style="border-color: var(--border-color); margin: 15px 0;">
@@ -659,15 +688,15 @@
             <div class="settings-column">
                 <h3>Zaman Aralığı Ayarları</h3>
                 <div class="setting-item">
-                    <label for="weeklyIntervalDays">1H Değişim (Gün):</label>
+                    <label for="weeklyIntervalDays">1H Değişim (Gün): <i class="fas fa-info-circle info-icon" title="1H (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i></label>
                     <input type="number" id="weeklyIntervalDays" value="7" min="1" step="1">
                 </div>
                 <div class="setting-item">
-                    <label for="monthlyIntervalDays">1A Değişim (Gün):</label>
+                    <label for="monthlyIntervalDays">1A Değişim (Gün): <i class="fas fa-info-circle info-icon" title="1A (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i></label>
                     <input type="number" id="monthlyIntervalDays" value="30" min="1" step="1">
                 </div>
                 <div class="setting-item">
-                    <label for="yearlyIntervalDays">1Y Değişim (Gün):</label>
+                    <label for="yearlyIntervalDays">1Y Değişim (Gün): <i class="fas fa-info-circle info-icon" title="1Y (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i></label>
                     <input type="number" id="yearlyIntervalDays" value="365" min="1" step="1">
                 </div>
             </div>
@@ -675,59 +704,66 @@
             <div class="settings-column">
                 <h3>Kolon Adı Ayarları</h3>
                 <div class="setting-item">
-                    <label for="colNameWeekly">1H Kolon Adı:</label>
+                    <label for="colNameWeekly">1H Kolon Adı: <i class="fas fa-info-circle info-icon" title="1H (%) kolonunun tablo başlığındaki adını değiştirir."></i></label>
                     <input type="text" id="colNameWeekly" value="1H %">
                 </div>
                 <div class="setting-item">
-                    <label for="colNameMonthly">1A Kolon Adı:</label>
+                    <label for="colNameMonthly">1A Kolon Adı: <i class="fas fa-info-circle info-icon" title="1A (%) kolonunun tablo başlığındaki adını değiştirir."></i></label>
                     <input type="text" id="colNameMonthly" value="1A %">
                 </div>
                 <div class="setting-item">
-                    <label for="colNameYearly">1Y Kolon Adı:</label>
+                    <label for="colNameYearly">1Y Kolon Adı: <i class="fas fa-info-circle info-icon" title="1Y (%) kolonunun tablo başlığındaki adını değiştirir."></i></label>
                     <input type="text" id="colNameYearly" value="1Y %">
                 </div>
             </div>
-        </div>
 
-        <hr style="border-color: var(--border-color); margin: 15px 0;">
-        <div class="settings-group">
             <div class="settings-column">
                 <h3>Renk Kuralı Ayarları</h3>
                 <div class="setting-item">
-                    <label for="positiveThreshold">Pozitif Eşik (%) :</label>
-                    <input type="number" id="positiveThreshold" value="5" min="0" step="1">
+                    <label for="weeklyPositiveThreshold">1H Pozitif Eşik (%): <i class="fas fa-info-circle info-icon" title="1H değişimi için pozitif eşik değeri. Bu değerin üzerindeki yüzdeler 'Yüksek Pozitif' renginde, altındakiler 'Düşük Pozitif' renginde gösterilir."></i></label>
+                    <input type="number" id="weeklyPositiveThreshold" value="5" min="0" step="1">
                 </div>
                 <div class="setting-item">
-                    <label for="highPctColor">Yüksek Pozitif Renk:</label>
+                    <label for="monthlyPositiveThreshold">1A Pozitif Eşik (%): <i class="fas fa-info-circle info-icon" title="1A değişimi için pozitif eşik değeri."></i></label>
+                    <input type="number" id="monthlyPositiveThreshold" value="10" min="0" step="1">
+                </div>
+                <div class="setting-item">
+                    <label for="yearlyPositiveThreshold">1Y Pozitif Eşik (%): <i class="fas fa-info-circle info-icon" title="1Y değişimi için pozitif eşik değeri."></i></label>
+                    <input type="number" id="yearlyPositiveThreshold" value="20" min="0" step="1">
+                </div>
+                <div class="setting-item">
+                    <label for="highPctColor">Yüksek Pozitif Renk: <i class="fas fa-info-circle info-icon" title="Pozitif eşiğin üzerindeki yüzdeler için kullanılacak renk."></i></label>
                     <input type="color" id="highPctColor" value="#22c55e">
                 </div>
                 <div class="setting-item">
-                    <label for="lowPctColor">Düşük Pozitif Renk:</label>
+                    <label for="lowPctColor">Düşük Pozitif Renk: <i class="fas fa-info-circle info-icon" title="Pozitif eşiğin altındaki (ve sıfırın üzerindeki) yüzdeler için kullanılacak renk."></i></label>
                     <input type="color" id="lowPctColor" value="#f59e0b">
                 </div>
+                <!-- Negatif renk artık sabit, kullanıcı değiştiremez -->
                 <div class="setting-item">
-                    <label for="negativePctColor">Negatif Renk:</label>
-                    <input type="color" id="negativePctColor" value="#ef4444">
+                    <label>Negatif Renk: <i class="fas fa-info-circle info-icon" title="Tüm negatif yüzde değişimleri için sabit kırmızı renk kullanılır."></i></label>
+                    <span style="background-color: #ef4444; width: 30px; height: 20px; border-radius: 3px; display: inline-block; vertical-align: middle;"></span>
+                    <span style="margin-left: 5px; color: #ef4444;">Sabit Kırmızı</span>
                 </div>
             </div>
         </div>
 
-        <button id="saveSettingsBtn">Ayarları Kaydet</button>
-        <button id="closeSettingsBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+        <button id="saveSettingsBtn" title="Ayarları kaydeder ve tabloyu günceller.">Ayarları Kaydet</button>
+        <button id="closeSettingsBtn" class="close-btn" title="Ayarlar panelini kapatır."><i class="fas fa-times"></i></button>
     </div>
 
     <!-- Coin Bilgi Paneli (Gemini API Destekli) -->
     <div id="coinInfoPanel" class="coin-info-panel">
         <h3 id="coinInfoTitle">✨ Coin Bilgisi</h3>
         <p id="coinDescription" class="coin-description">Yükleniyor...</p>
-        <button id="closeCoinInfoBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+        <button id="closeCoinInfoBtn" class="close-btn" title="Coin bilgi panelini kapatır."><i class="fas fa-times"></i></button>
     </div>
 
     <!-- En Düşük Fiyat Bilgisi Paneli -->
     <div id="lowestPriceInfoPanel" class="coin-info-panel">
         <h3 id="lowestPriceInfoTitle">En Düşük Fiyat Bilgisi</h3>
         <p id="lowestPriceDetails" class="coin-description"></p>
-        <button id="closeLowestPriceInfoBtn" class="close-btn" title="Kapat"><i class="fas fa-times"></i></button>
+        <button id="closeLowestPriceInfoBtn" class="close-btn" title="En düşük fiyat bilgi panelini kapatır."><i class="fas fa-times"></i></button>
     </div>
 
     <!-- Modal Arka Planı -->
@@ -780,10 +816,12 @@
         const thYearly = document.getElementById("th-yearly");
 
         // Renk kuralı ayarları elementleri
-        const positiveThresholdInput = document.getElementById("positiveThreshold");
+        const weeklyPositiveThresholdInput = document.getElementById("weeklyPositiveThreshold"); // Yeni
+        const monthlyPositiveThresholdInput = document.getElementById("monthlyPositiveThreshold"); // Yeni
+        const yearlyPositiveThresholdInput = document.getElementById("yearlyPositiveThreshold"); // Yeni
         const highPctColorInput = document.getElementById("highPctColor");
         const lowPctColorInput = document.getElementById("lowPctColor");
-        const negativePctColorInput = document.getElementById("negativePctColor");
+        // const negativePctColorInput = document.getElementById("negativePctColor"); // Bu artık kullanılmıyor
 
         let autoRefreshTimer; // Otomatik yenileme zamanlayıcısını tutar
         let currentRefreshInterval = 120000; // Varsayılan 2 dakika (ms cinsinden)
@@ -807,10 +845,12 @@
 
         // Dinamik renk kuralı ayarları
         let dynamicColorRules = {
-            positiveThreshold: 5, // Yüksek pozitif ve düşük pozitif arasındaki eşik
+            weeklyPositiveThreshold: 5, // 1H için eşik
+            monthlyPositiveThreshold: 10, // 1A için eşik
+            yearlyPositiveThreshold: 20, // 1Y için eşik
             highColor: '#22c55e',
             lowColor: '#f59e0b',
-            negativeColor: '#ef4444'
+            negativeColor: '#ef4444' // Negatif renk sabitlendi
         };
 
 
@@ -984,19 +1024,19 @@
                 if (result.error) {
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
-                        <td>${result.pair.replace("USDT", "/USDT")}</td>
+                        <td class="coin-name-cell" data-coin="${result.pair}"><span class="ai-info-icon" title="Bu coin hakkında AI bilgisi almak için tıklayın."><i class="fas fa-sparkles"></i></span> ${result.pair.replace("USDT", "/USDT")}</td>
                         <td>N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
-                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Kaldır"><i class="fas fa-times"></i></button></td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Bu coini listeden kaldır."><i class="fas fa-times"></i></button></td>
                     `;
                 } else {
                     // Renk kurallarını uygula
                     let weeklyColorStyle = '';
                     if (parseFloat(result.weeklyPct) < 0) {
                         weeklyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
-                    } else if (parseFloat(result.weeklyPct) >= dynamicColorRules.positiveThreshold) {
+                    } else if (parseFloat(result.weeklyPct) >= dynamicColorRules.weeklyPositiveThreshold) { // Use specific threshold
                         weeklyColorStyle = `color: ${dynamicColorRules.highColor};`;
                     } else { // >= 0 and < positiveThreshold
                         weeklyColorStyle = `color: ${dynamicColorRules.lowColor};`;
@@ -1005,7 +1045,7 @@
                     let monthlyColorStyle = '';
                     if (parseFloat(result.monthlyPct) < 0) {
                         monthlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
-                    } else if (parseFloat(result.monthlyPct) >= dynamicColorRules.positiveThreshold) {
+                    } else if (parseFloat(result.monthlyPct) >= dynamicColorRules.monthlyPositiveThreshold) { // Use specific threshold
                         monthlyColorStyle = `color: ${dynamicColorRules.highColor};`;
                     } else {
                         monthlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
@@ -1014,7 +1054,7 @@
                     let yearlyColorStyle = '';
                     if (parseFloat(result.yearlyPct) < 0) {
                         yearlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
-                    } else if (parseFloat(result.yearlyPct) >= dynamicColorRules.positiveThreshold) {
+                    } else if (parseFloat(result.yearlyPct) >= dynamicColorRules.yearlyPositiveThreshold) { // Use specific threshold
                         yearlyColorStyle = `color: ${dynamicColorRules.highColor};`;
                     } else {
                         yearlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
@@ -1022,12 +1062,12 @@
                     
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
-                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "/USDT")}</td>
+                        <td class="coin-name-cell" data-coin="${result.pair}"><span class="ai-info-icon" title="Bu coin hakkında AI bilgisi almak için tıklayın."><i class="fas fa-sparkles"></i></span> ${result.pair.replace("USDT", "/USDT")}</td>
                         <td>${formatPrice(result.latestPrice)}</td>
-                        <td style="${weeklyColorStyle}" class="clickable-pct" data-period="weekly" data-coin="${result.pair}" data-lowest-price="${result.weeklyLowestPrice}" data-lowest-price-date="${result.weeklyLowestPriceDate}">${result.weeklyPct}%</td>
-                        <td style="${monthlyColorStyle}" class="clickable-pct" data-period="monthly" data-coin="${result.pair}" data-lowest-price="${result.monthlyLowestPrice}" data-lowest-price-date="${result.monthlyLowestPriceDate}">${result.monthlyPct}%</td>
-                        <td style="${yearlyColorStyle}" class="clickable-pct" data-period="yearly" data-coin="${result.pair}" data-lowest-price="${result.yearlyLowestPrice}" data-lowest-price-date="${result.yearlyLowestPriceDate}">${result.yearlyPct}%</td>
-                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Kaldır"><i class="fas fa-times"></i></button></td>
+                        <td style="${weeklyColorStyle}" class="clickable-pct" data-period="weekly" data-coin="${result.pair}" data-lowest-price="${result.weeklyLowestPrice}" data-lowest-price-date="${result.weeklyLowestPriceDate}" title="Bu dönemdeki en düşük fiyatı ve tarihini görmek için tıklayın.">${result.weeklyPct}%</td>
+                        <td style="${monthlyColorStyle}" class="clickable-pct" data-period="monthly" data-coin="${result.pair}" data-lowest-price="${result.monthlyLowestPrice}" data-lowest-price-date="${result.monthlyLowestPriceDate}" title="Bu dönemdeki en düşük fiyatı ve tarihini görmek için tıklayın.">${result.monthlyPct}%</td>
+                        <td style="${yearlyColorStyle}" class="clickable-pct" data-period="yearly" data-coin="${result.pair}" data-lowest-price="${result.yearlyLowestPrice}" data-lowest-price-date="${result.yearlyLowestPriceDate}" title="Bu dönemdeki en düşük fiyatı ve tarihini görmek için tıklayın.">${result.yearlyPct}%</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Bu coini listeden kaldır."><i class="fas fa-times"></i></button></td>
                     `;
                 }
                 
@@ -1072,37 +1112,49 @@
 
         // Yeni coin ekle
         async function addNewCoin() {
-            const newCoin = newCoinInput.value.trim().toUpperCase();
-            if (!newCoin) {
-                showNotification('Lütfen bir coin sembolü girin!', false);
+            const newCoinInputVal = newCoinInput.value.trim();
+            if (!newCoinInputVal) {
+                showNotification('Lütfen bir veya birden fazla coin sembolü girin!', false);
                 return;
             }
             
-            const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
-            
-            if (pairs.includes(fullPair)) {
-                showNotification('Bu coin zaten listede var!', false);
-                return;
-            }
-            
-            // Coin'in varlığını kontrol et
-            addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Kontrol Ediliyor...';
-            
-            try {
-                const response = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${fullPair}`);
-                if (response.data.symbol) {
-                    pairs.push(fullPair);
-                    saveCoins(); // Yeni coini kaydet
-                    fetchData(); // Tabloyu güncelle
-                    newCoinInput.value = '';
-                    showNotification(`${fullPair.replace("USDT", "")} başarıyla eklendi!`);
+            const newCoins = newCoinInputVal.split(',').map(coin => coin.trim().toUpperCase());
+            let addedCount = 0;
+
+            addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Ekleniyor...';
+
+            for (const newCoin of newCoins) {
+                if (!newCoin) continue; // Boş girdileri atla
+
+                const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
+                
+                if (pairs.includes(fullPair)) {
+                    showNotification(`${newCoin} zaten listede var!`, false);
+                    continue;
                 }
-            } catch (error) {
-                showNotification('Geçersiz coin sembolü!', false);
-                console.error('Coin eklenirken hata:', error);
-            } finally {
-                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> Ekle';
+                
+                try {
+                    const response = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${fullPair}`);
+                    if (response.data.symbol) {
+                        pairs.push(fullPair);
+                        addedCount++;
+                    }
+                } catch (error) {
+                    showNotification(`Geçersiz coin sembolü: ${newCoin}!`, false);
+                    console.error(`Coin eklenirken hata: ${newCoin}`, error);
+                }
             }
+
+            if (addedCount > 0) {
+                saveCoins(); // Coin listesini kaydet
+                fetchData(); // Tabloyu güncelle
+                newCoinInput.value = '';
+                showNotification(`${addedCount} coin başarıyla eklendi!`);
+            } else if (newCoins.length > 0) {
+                showNotification('Hiçbir coin eklenemedi.', false);
+            }
+            
+            addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> Ekle';
         }
 
         // Tabloyu sırala
@@ -1187,15 +1239,18 @@
                 colNameYearlyInput.value = customColumnNames.yearly;
 
                 // Dinamik renk kurallarını yükle
-                dynamicColorRules.positiveThreshold = settings.dynamicColorRules?.positiveThreshold || 5;
+                dynamicColorRules.weeklyPositiveThreshold = settings.dynamicColorRules?.weeklyPositiveThreshold || 5;
+                dynamicColorRules.monthlyPositiveThreshold = settings.dynamicColorRules?.monthlyPositiveThreshold || 10;
+                dynamicColorRules.yearlyPositiveThreshold = settings.dynamicColorRules?.yearlyPositiveThreshold || 20;
                 dynamicColorRules.highColor = settings.dynamicColorRules?.highColor || '#22c55e';
                 dynamicColorRules.lowColor = settings.dynamicColorRules?.lowColor || '#f59e0b';
-                dynamicColorRules.negativeColor = settings.dynamicColorRules?.negativeColor || '#ef4444';
+                // Negatif renk sabit olduğu için buradan yüklenmiyor
 
-                positiveThresholdInput.value = dynamicColorRules.positiveThreshold;
+                weeklyPositiveThresholdInput.value = dynamicColorRules.weeklyPositiveThreshold;
+                monthlyPositiveThresholdInput.value = dynamicColorRules.monthlyPositiveThreshold;
+                yearlyPositiveThresholdInput.value = dynamicColorRules.yearlyPositiveThreshold;
                 highPctColorInput.value = dynamicColorRules.highColor;
                 lowPctColorInput.value = dynamicColorRules.lowColor;
-                negativePctColorInput.value = dynamicColorRules.negativeColor;
             }
             toggleAutoRefresh(autoRefreshToggle.checked);
         }
@@ -1216,10 +1271,12 @@
                     yearly: colNameYearlyInput.value
                 },
                 dynamicColorRules: {
-                    positiveThreshold: parseInt(positiveThresholdInput.value),
+                    weeklyPositiveThreshold: parseInt(weeklyPositiveThresholdInput.value),
+                    monthlyPositiveThreshold: parseInt(monthlyPositiveThresholdInput.value),
+                    yearlyPositiveThreshold: parseInt(yearlyPositiveThresholdInput.value),
                     highColor: highPctColorInput.value,
                     lowColor: lowPctColorInput.value,
-                    negativeColor: negativePctColorInput.value
+                    negativeColor: '#ef4444' // Negatif renk sabitlendi
                 }
             };
             localStorage.setItem('crypto-tracker-settings', JSON.stringify(settings));
@@ -1279,8 +1336,8 @@
             const legendLow = document.getElementById('legend-low');
             const legendNegative = document.getElementById('legend-negative');
 
-            legendHigh.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.highColor};"></span> ${customColumnNames.weekly}: >+${dynamicColorRules.positiveThreshold}% | ${customColumnNames.monthly}: >+${dynamicColorRules.positiveThreshold}% | ${customColumnNames.yearly}: >+${dynamicColorRules.positiveThreshold}%`;
-            legendLow.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.lowColor};"></span> ${customColumnNames.weekly}: %0 - +${dynamicColorRules.positiveThreshold}% | ${customColumnNames.monthly}: %0 - +${dynamicColorRules.positiveThreshold}% | ${customColumnNames.yearly}: %0 - +${dynamicColorRules.positiveThreshold}%`;
+            legendHigh.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.highColor};"></span> ${customColumnNames.weekly}: >+${dynamicColorRules.weeklyPositiveThreshold}% | ${customColumnNames.monthly}: >+${dynamicColorRules.monthlyPositiveThreshold}% | ${customColumnNames.yearly}: >+${dynamicColorRules.yearlyPositiveThreshold}%`;
+            legendLow.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.lowColor};"></span> ${customColumnNames.weekly}: %0 - +${dynamicColorRules.weeklyPositiveThreshold}% | ${customColumnNames.monthly}: %0 - +${dynamicColorRules.monthlyPositiveThreshold}% | ${customColumnNames.yearly}: %0 - +${dynamicColorRules.yearlyPositiveThreshold}%`;
             legendNegative.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.negativeColor};"></span> Herhangi bir negatif değer`;
         }
 
