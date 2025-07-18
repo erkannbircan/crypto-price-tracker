@@ -2,152 +2,297 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Crypto Price Tracker</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --danger-color: #f72585;
+            --success-color: #4cc9f0;
+            --text-color: #2b2d42;
+            --bg-color: #f8f9fa;
+            --card-color: #ffffff;
+            --border-color: #dee2e6;
+        }
+        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 15px;
-            background-color: #f5f5f5;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
         }
+        
         .container {
             max-width: 100%;
             margin: 0 auto;
-            background-color: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            background-color: var(--card-color);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             overflow-x: auto;
         }
+        
         h1 {
-            color: #333;
+            color: var(--primary-color);
             text-align: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             margin-bottom: 20px;
+            font-weight: 600;
         }
+        
         .controls {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 12px;
+            margin-bottom: 20px;
+            align-items: center;
         }
+        
         button {
-            background-color: #4CAF50;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+            padding: 10px 16px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             white-space: nowrap;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
+        
         button:hover {
-            background-color: #45a049;
+            opacity: 0.9;
+            transform: translateY(-1px);
         }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
         .add-coin {
             display: flex;
             gap: 10px;
             flex-grow: 1;
+            min-width: 200px;
         }
+        
         input {
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            min-width: 100px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             flex-grow: 1;
+            font-size: 0.95rem;
+            transition: border 0.2s ease;
         }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+        
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-            font-size: 0.9rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 20px;
+            font-size: 0.95rem;
         }
+        
         th, td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 15px;
             text-align: left;
         }
+        
         th {
-            background-color: #f2f2f2;
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
             position: sticky;
             top: 0;
         }
+        
+        tr:not(:last-child) td {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        tr:hover td {
+            background-color: rgba(0,0,0,0.02);
+        }
+        
         .positive {
-            color: green;
+            color: var(--success-color);
+            font-weight: 500;
         }
+        
         .negative {
-            color: red;
+            color: var(--danger-color);
+            font-weight: 500;
         }
+        
         .update-time {
             text-align: center;
-            margin: 10px 0;
-            color: #666;
-            font-size: 0.8rem;
+            margin: 15px 0;
+            color: #6c757d;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
+        
         .drag-handle {
             cursor: move;
-            padding: 0 5px;
-            color: #666;
+            padding: 0 8px;
+            color: #adb5bd;
+            font-size: 1.1rem;
+            text-align: center;
         }
+        
         .remove-btn {
-            background-color: #f44336;
-            padding: 5px 8px;
-            font-size: 0.8rem;
+            background-color: var(--danger-color);
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            border-radius: 6px;
         }
-        .remove-btn:hover {
-            background-color: #d32f2f;
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(0,0,0,0.05);
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        @media (max-width: 600px) {
-            th, td {
-                padding: 8px 5px;
-                font-size: 0.8rem;
+        
+        .action-btn:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                border-radius: 0;
             }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+            
+            .drag-handle {
+                padding: 0 5px;
+                font-size: 1rem;
+            }
+            
             .controls {
                 flex-direction: column;
             }
-            .drag-handle {
-                padding: 0 3px;
+            
+            .add-coin {
+                width: 100%;
+                min-width: unset;
             }
-            .remove-btn {
-                padding: 3px 5px;
-                font-size: 0.7rem;
+            
+            button {
+                width: 100%;
+                justify-content: center;
             }
+        }
+        
+        /* Touch optimization for SortableJS */
+        .sortable-ghost {
+            opacity: 0.5;
+            background: var(--bg-color);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Crypto Price Tracker</h1>
+        <h1><i class="fas fa-coins"></i> Crypto Price Tracker</h1>
         
         <div class="controls">
-            <button id="refreshBtn">Refresh Prices</button>
+            <button id="refreshBtn">
+                <span id="refreshIcon"><i class="fas fa-sync-alt"></i></span>
+                <span>Refresh Prices</span>
+            </button>
             <div class="add-coin">
                 <input type="text" id="newCoinInput" placeholder="Add coin (e.g. BTC)">
-                <button id="addCoinBtn">Add Coin</button>
+                <button id="addCoinBtn"><i class="fas fa-plus"></i> Add</button>
             </div>
         </div>
         
-        <div class="update-time">Last updated: <span id="updateTime">Never</span></div>
+        <div class="update-time">
+            <i class="far fa-clock"></i>
+            <span>Last updated: <span id="updateTime">Never</span></span>
+        </div>
         
         <table>
             <thead>
                 <tr>
-                    <th style="width: 30px;"></th>
+                    <th style="width: 40px;"></th>
                     <th>Coin</th>
-                    <th>Current Price (USDT)</th>
-                    <th>1 Week %</th>
-                    <th>1 Month %</th>
-                    <th>1 Year %</th>
-                    <th>Action</th>
+                    <th>Price</th>
+                    <th>1W %</th>
+                    <th>1M %</th>
+                    <th>1Y %</th>
+                    <th style="width: 50px;">Action</th>
                 </tr>
             </thead>
             <tbody id="priceTable">
             </tbody>
         </table>
     </div>
+    
+    <div class="notification" id="notification"></div>
 
     <script>
         // Default coins
@@ -157,6 +302,8 @@
         const refreshBtn = document.getElementById("refreshBtn");
         const addCoinBtn = document.getElementById("addCoinBtn");
         const newCoinInput = document.getElementById("newCoinInput");
+        const refreshIcon = document.getElementById("refreshIcon");
+        const notification = document.getElementById("notification");
 
         // Load saved coins from localStorage
         function loadSavedCoins() {
@@ -171,12 +318,28 @@
             localStorage.setItem('crypto-tracker-coins', JSON.stringify(pairs));
         }
 
+        // Show notification
+        function showNotification(message, isSuccess = true) {
+            notification.textContent = message;
+            notification.style.backgroundColor = isSuccess ? 'var(--primary-color)' : 'var(--danger-color)';
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
         // Format price
         function formatPrice(price) {
-            return parseFloat(price).toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 8
-            });
+            const num = parseFloat(price);
+            if (num < 1) {
+                return num.toFixed(6);
+            } else if (num < 10) {
+                return num.toFixed(4);
+            } else if (num < 1000) {
+                return num.toFixed(2);
+            } else {
+                return num.toLocaleString('en-US', { maximumFractionDigits: 2 });
+            }
         }
 
         // Initialize sortable table
@@ -184,7 +347,12 @@
             new Sortable(priceTable, {
                 handle: '.drag-handle',
                 animation: 150,
-                onEnd: function() {
+                touchStartThreshold: 10,
+                onStart: () => {
+                    document.body.style.cursor = 'grabbing';
+                },
+                onEnd: () => {
+                    document.body.style.cursor = '';
                     const rows = priceTable.querySelectorAll('tr');
                     const newOrder = [];
                     rows.forEach(row => {
@@ -193,53 +361,76 @@
                     });
                     pairs = newOrder;
                     saveCoins();
+                    showNotification('Coin order updated!');
                 }
             });
         }
 
+        // Fetch data for a single coin
+        async function fetchCoinData(pair) {
+            try {
+                const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&limit=365`);
+                const data = response.data;
+                
+                const latestPrice = parseFloat(data[data.length - 1][4]);
+                const weeklyLow = Math.min(...data.slice(-7).map(d => parseFloat(d[3])));
+                const monthlyLow = Math.min(...data.slice(-30).map(d => parseFloat(d[3])));
+                const yearlyLow = Math.min(...data.map(d => parseFloat(d[3])));
+                
+                return {
+                    pair,
+                    latestPrice,
+                    weeklyPct: ((latestPrice - weeklyLow) / weeklyLow * 100).toFixed(2),
+                    monthlyPct: ((latestPrice - monthlyLow) / monthlyLow * 100).toFixed(2),
+                    yearlyPct: ((latestPrice - yearlyLow) / yearlyLow * 100).toFixed(2),
+                    error: null
+                };
+            } catch (error) {
+                console.error(`Error fetching data for ${pair}:`, error);
+                return {
+                    pair,
+                    latestPrice: null,
+                    weeklyPct: null,
+                    monthlyPct: null,
+                    yearlyPct: null,
+                    error: error.message
+                };
+            }
+        }
+
         // Fetch data for all coins
         async function fetchData() {
-            priceTable.innerHTML = ''; // Clear table
+            refreshIcon.innerHTML = '<div class="loading"></div>';
+            priceTable.innerHTML = '';
             
-            for (const pair of pairs) {
-                try {
-                    const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&limit=365`);
-                    const data = response.data;
-                    
-                    const latestPrice = parseFloat(data[data.length - 1][4]);
-                    const weeklyLow = Math.min(...data.slice(-7).map(d => parseFloat(d[3])));
-                    const monthlyLow = Math.min(...data.slice(-30).map(d => parseFloat(d[3])));
-                    const yearlyLow = Math.min(...data.map(d => parseFloat(d[3])));
-                    
-                    const weeklyPct = ((latestPrice - weeklyLow) / weeklyLow * 100).toFixed(2);
-                    const monthlyPct = ((latestPrice - monthlyLow) / monthlyLow * 100).toFixed(2);
-                    const yearlyPct = ((latestPrice - yearlyLow) / yearlyLow * 100).toFixed(2);
-                    
-                    const row = document.createElement("tr");
-                    row.setAttribute('data-coin', pair);
+            const promises = pairs.map(pair => fetchCoinData(pair));
+            const results = await Promise.all(promises);
+            
+            results.forEach(result => {
+                const row = document.createElement("tr");
+                row.setAttribute('data-coin', result.pair);
+                
+                if (result.error) {
                     row.innerHTML = `
-                        <td class="drag-handle">≡</td>
-                        <td>${pair.replace("USDT", "/USDT")}</td>
-                        <td>${formatPrice(latestPrice)}</td>
-                        <td class="${weeklyPct >= 0 ? 'positive' : 'negative'}">${weeklyPct}%</td>
-                        <td class="${monthlyPct >= 0 ? 'positive' : 'negative'}">${monthlyPct}%</td>
-                        <td class="${yearlyPct >= 0 ? 'positive' : 'negative'}">${yearlyPct}%</td>
-                        <td><button class="remove-btn" data-coin="${pair}">X</button></td>
+                        <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
+                        <td>${result.pair.replace("USDT", "/USDT")}</td>
+                        <td colspan="4" style="color: var(--danger-color);">Error: ${result.error}</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove"><i class="fas fa-times"></i></button></td>
                     `;
-                    priceTable.appendChild(row);
-                } catch (error) {
-                    console.error(`Error fetching data for ${pair}:`, error);
-                    const row = document.createElement("tr");
-                    row.setAttribute('data-coin', pair);
+                } else {
                     row.innerHTML = `
-                        <td class="drag-handle">≡</td>
-                        <td>${pair.replace("USDT", "/USDT")}</td>
-                        <td colspan="4" style="color: red;">Error loading data</td>
-                        <td><button class="remove-btn" data-coin="${pair}">X</button></td>
+                        <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
+                        <td>${result.pair.replace("USDT", "/USDT")}</td>
+                        <td>${formatPrice(result.latestPrice)}</td>
+                        <td class="${result.weeklyPct >= 0 ? 'positive' : 'negative'}">${result.weeklyPct}%</td>
+                        <td class="${result.monthlyPct >= 0 ? 'positive' : 'negative'}">${result.monthlyPct}%</td>
+                        <td class="${result.yearlyPct >= 0 ? 'positive' : 'negative'}">${result.yearlyPct}%</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove"><i class="fas fa-times"></i></button></td>
                     `;
-                    priceTable.appendChild(row);
                 }
-            }
+                
+                priceTable.appendChild(row);
+            });
             
             // Add event listeners to remove buttons
             document.querySelectorAll('.remove-btn').forEach(btn => {
@@ -248,6 +439,7 @@
                     pairs = pairs.filter(coin => coin !== coinToRemove);
                     saveCoins();
                     fetchData();
+                    showNotification(`${coinToRemove.replace("USDT", "")} removed`);
                 });
             });
             
@@ -255,22 +447,39 @@
             initSortable();
             
             updateTime.textContent = new Date().toLocaleString();
+            refreshIcon.innerHTML = '<i class="fas fa-sync-alt"></i>';
+            showNotification('Prices updated successfully!');
         }
 
         // Add new coin
-        function addNewCoin() {
+        async function addNewCoin() {
             const newCoin = newCoinInput.value.trim().toUpperCase();
             if (!newCoin) return;
             
             const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
             
-            if (!pairs.includes(fullPair)) {
-                pairs.push(fullPair);
-                saveCoins();
-                fetchData();
-                newCoinInput.value = '';
-            } else {
-                alert('This coin is already in the list!');
+            if (pairs.includes(fullPair)) {
+                showNotification('This coin is already in the list!', false);
+                return;
+            }
+            
+            // Check if coin exists by fetching data
+            addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Checking...';
+            
+            try {
+                const response = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${fullPair}`);
+                if (response.data.symbol) {
+                    pairs.push(fullPair);
+                    saveCoins();
+                    fetchData();
+                    newCoinInput.value = '';
+                    showNotification(`${fullPair.replace("USDT", "")} added successfully!`);
+                }
+            } catch (error) {
+                showNotification('Invalid coin symbol!', false);
+                console.error('Error adding coin:', error);
+            } finally {
+                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> Add';
             }
         }
 
@@ -286,6 +495,9 @@
         // Initialize
         loadSavedCoins();
         fetchData();
+        
+        // Auto-refresh every 20 minutes
+        setInterval(fetchData, 1200000);
     </script>
 </body>
 </html>
