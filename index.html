@@ -137,12 +137,16 @@
             font-size: 0.98rem;
             border-radius: 12px;
             overflow: hidden; /* Ensures corners are applied */
+            table-layout: fixed; /* Crucial for consistent column widths */
         }
         
         th, td {
             border-bottom: 1px solid var(--border-color);
             padding: 14px 18px; /* Cell padding */
             text-align: left;
+            white-space: nowrap; /* Prevent text wrapping in table cells */
+            overflow: hidden; /* Hide overflow content */
+            text-overflow: ellipsis; /* Add ellipsis for overflowing text */
         }
         
         th {
@@ -341,8 +345,7 @@
             display: flex; /* Always flex, control visibility with opacity/transform */
             flex-direction: column;
             gap: 25px; /* More space between sections */
-            max-width: 90%;
-            width: 850px; /* Slightly wider */
+            width: clamp(300px, 80vw, 850px); /* Responsive width for desktop and mobile */
             border: 1px solid rgba(0,0,0,0.05); /* Very subtle border */
             max-height: 90vh;
             overflow-y: auto;
@@ -619,9 +622,40 @@
                 margin-bottom: 20px;
             }
             
+            /* Table specific adjustments for mobile */
+            table {
+                table-layout: fixed; /* Ensure fixed layout for mobile */
+                width: 100%;
+            }
             th, td {
-                padding: 10px 8px;
-                font-size: 0.8rem;
+                padding: 8px 5px; /* Reduced padding */
+                font-size: 0.75rem; /* Smaller font size */
+                white-space: nowrap; /* Prevent text wrapping in table cells */
+                overflow: hidden; /* Hide overflow content */
+                text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+            }
+            /* Specific column widths for mobile */
+            table th:nth-child(1), table td:nth-child(1) { /* Drag handle */
+                width: 30px;
+                min-width: 30px;
+            }
+            table th:nth-child(2), table td:nth-child(2) { /* Coin */
+                width: 25%; /* Give more space to coin name */
+                min-width: 70px;
+            }
+            table th:nth-child(3), table td:nth-child(3) { /* Price */
+                width: 25%;
+                min-width: 70px;
+            }
+            table th:nth-child(4), table td:nth-child(4), /* 1H % */
+            table th:nth-child(5), table td:nth-child(5), /* 1A % */
+            table th:nth-child(6), table td:nth-child(6) { /* 1Y % */
+                width: 15%; /* Smaller fixed width for percentages */
+                min-width: 50px;
+            }
+            table th:nth-child(7), table td:nth-child(7) { /* Delete */
+                width: 40px;
+                min-width: 40px;
             }
             
             .drag-handle {
@@ -937,52 +971,54 @@
         let pairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]; // Default coins
         let allCoinData = []; // Stores all coin data for sorting
 
-        const updateTime = document.getElementById("updateTime");
-        const priceTable = document.getElementById("priceTable");
-        const refreshBtn = document.getElementById("refreshBtn");
-        const addCoinBtn = document.getElementById("addCoinBtn");
-        const newCoinInput = document.getElementById("newCoinInput");
-        const refreshIcon = document.getElementById("refreshIcon");
-        const notification = document.getElementById("notification");
-        const resetSortBtn = document.getElementById("resetSortBtn"); // New button
+        // Get elements after DOM is fully loaded
+        let updateTime;
+        let priceTable;
+        let refreshBtn;
+        let addCoinBtn;
+        let newCoinInput;
+        let refreshIcon;
+        let notification;
+        let resetSortBtn;
 
         // Settings panel elements
-        const settingsBtn = document.getElementById("settingsBtn");
-        const settingsPanel = document.getElementById("settingsPanel");
-        const closeSettingsBtn = document.getElementById("closeSettingsBtn");
-        const autoRefreshToggle = document.getElementById("autoRefreshToggle");
-        const refreshIntervalInput = document.getElementById("refreshInterval");
-        const weeklyIntervalDaysInput = document.getElementById("weeklyIntervalDays");
-        const monthlyIntervalDaysInput = document.getElementById("monthlyIntervalDays");
-        const yearlyIntervalDaysInput = document.getElementById("yearlyIntervalDays");
-        const colNameWeeklyInput = document.getElementById("colNameWeekly"); // New column name input
-        const colNameMonthlyInput = document.getElementById("colNameMonthly"); // New column name input
-        const colNameYearlyInput = document.getElementById("colNameYearly"); // New column name input
-        const saveSettingsBtn = document.getElementById("saveSettingsBtn");
-        const overlay = document.getElementById("overlay");
+        let settingsBtn;
+        let settingsPanel;
+        let closeSettingsBtn;
+        let autoRefreshToggle;
+        let refreshIntervalInput;
+        let weeklyIntervalDaysInput;
+        let monthlyIntervalDaysInput;
+        let yearlyIntervalDaysInput;
+        let colNameWeeklyInput;
+        let colNameMonthlyInput;
+        let colNameYearlyInput;
+        let saveSettingsBtn;
+        let overlay;
 
         // Lowest price info panel elements
-        const lowestPriceInfoPanel = document.getElementById("lowestPriceInfoPanel");
-        const lowestPriceInfoTitle = document.getElementById("lowestPriceInfoTitle");
-        const lowestPriceDetails = document.getElementById("lowestPriceDetails");
-        const closeLowestPriceInfoBtn = document.getElementById("closeLowestPriceInfoBtn");
+        let lowestPriceInfoPanel;
+        let lowestPriceInfoTitle;
+        let lowestPriceDetails;
+        let closeLowestPriceInfoBtn;
 
         // Table header elements
-        const thWeekly = document.getElementById("th-weekly");
-        const thMonthly = document.getElementById("th-monthly");
-        const thYearly = document.getElementById("th-yearly");
+        let thWeekly;
+        let thMonthly;
+        let thYearly;
 
         // Color rule settings elements
-        const weeklyPositiveThresholdInput = document.getElementById("weeklyPositiveThreshold"); // New
-        const monthlyPositiveThresholdInput = document.getElementById("monthlyPositiveThreshold"); // New
-        const yearlyPositiveThresholdInput = document.getElementById("yearlyPositiveThreshold"); // New
-        const highPctColorInput = document.getElementById("highPctColor");
-        const lowPctColorInput = document.getElementById("lowPctColor");
+        let weeklyPositiveThresholdInput;
+        let monthlyPositiveThresholdInput;
+        let yearlyPositiveThresholdInput;
+        let highPctColorInput;
+        let lowPctColorInput;
 
         // Legend toggle elements
-        const legendToggle = document.getElementById('legendToggle');
-        const legendContent = document.getElementById('legendContent');
-        const legendToggleIcon = document.getElementById('legendToggleIcon');
+        let legendToggle;
+        let legendContent;
+        let legendToggleIcon;
+
 
         let autoRefreshTimer; // Holds the auto-refresh timer
         let currentRefreshInterval = 120000; // Default 2 minutes (in ms)
@@ -1031,24 +1067,26 @@
         // Show notification
         function showNotification(message, isSuccess = true) {
             console.log("Showing notification:", message, "isSuccess:", isSuccess); // Added for debugging
-            notification.textContent = message;
-            notification.style.backgroundColor = isSuccess ? 'var(--primary-color)' : 'var(--danger-color)';
-            
-            // Make it visible immediately for transition to start
-            notification.style.display = 'block';
-            notification.style.visibility = 'visible';
-            notification.classList.add('show');
+            if (notification) {
+                notification.textContent = message;
+                notification.style.backgroundColor = isSuccess ? 'var(--primary-color)' : 'var(--danger-color)';
+                
+                // Make it visible immediately for transition to start
+                notification.style.display = 'block';
+                notification.style.visibility = 'visible';
+                notification.classList.add('show');
 
-            // Set a timeout to remove the 'show' class after 3 seconds
-            setTimeout(() => {
-                notification.classList.remove('show');
-                // After transition completes, hide it completely
+                // Set a timeout to remove the 'show' class after 3 seconds
                 setTimeout(() => {
-                    notification.style.display = 'none';
-                    notification.style.visibility = 'hidden';
-                }, 400); // Match this with CSS transition duration (0.4s)
-                console.log("Hiding notification:", message);
-            }, 3000);
+                    notification.classList.remove('show');
+                    // After transition completes, hide it completely
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                        notification.style.visibility = 'hidden';
+                    }, 400); // Match this with CSS transition duration (0.4s)
+                    console.log("Hiding notification:", message);
+                }, 3000);
+            }
         }
 
         // Format price
@@ -1096,27 +1134,29 @@
 
         // Initialize sortable table
         function initSortable() {
-            new Sortable(priceTable, {
-                handle: '.drag-handle',
-                animation: 150,
-                delay: 200, // 200ms delay before starting drag
-                touchStartThreshold: 10, // 10px movement threshold to start drag
-                onStart: () => {
-                    document.body.style.cursor = 'grabbing';
-                },
-                onEnd: () => {
-                    document.body.style.cursor = '';
-                    const rows = priceTable.querySelectorAll('tr');
-                    const newOrder = [];
-                    rows.forEach(row => {
-                        const coin = row.getAttribute('data-coin');
-                        if (coin) newOrder.push(coin);
-                    });
-                    pairs = newOrder;
-                    saveCoins();
-                    showNotification('Coin order updated!');
-                }
-            });
+            if (priceTable) { // Ensure priceTable exists
+                new Sortable(priceTable, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    delay: 200, // 200ms delay before starting drag
+                    touchStartThreshold: 10, // 10px movement threshold to start drag
+                    onStart: () => {
+                        document.body.style.cursor = 'grabbing';
+                    },
+                    onEnd: () => {
+                        document.body.style.cursor = '';
+                        const rows = priceTable.querySelectorAll('tr');
+                        const newOrder = [];
+                        rows.forEach(row => {
+                            const coin = row.getAttribute('data-coin');
+                            if (coin) newOrder.push(coin);
+                        });
+                        pairs = newOrder;
+                        saveCoins();
+                        showNotification('Coin order updated!');
+                    }
+                });
+            }
         }
 
         // Fetch data for a single coin
@@ -1556,6 +1596,54 @@
         // Event Listeners
         // Use DOMContentLoaded to ensure all elements are loaded before attaching listeners
         document.addEventListener('DOMContentLoaded', (event) => {
+            // Assign elements after DOM is loaded
+            updateTime = document.getElementById("updateTime");
+            priceTable = document.getElementById("priceTable");
+            refreshBtn = document.getElementById("refreshBtn");
+            addCoinBtn = document.getElementById("addCoinBtn");
+            newCoinInput = document.getElementById("newCoinInput");
+            refreshIcon = document.getElementById("refreshIcon");
+            notification = document.getElementById("notification");
+            resetSortBtn = document.getElementById("resetSortBtn");
+
+            // Settings panel elements
+            settingsBtn = document.getElementById("settingsBtn");
+            settingsPanel = document.getElementById("settingsPanel");
+            closeSettingsBtn = document.getElementById("closeSettingsBtn");
+            autoRefreshToggle = document.getElementById("autoRefreshToggle");
+            refreshIntervalInput = document.getElementById("refreshInterval");
+            weeklyIntervalDaysInput = document.getElementById("weeklyIntervalDays");
+            monthlyIntervalDaysInput = document.getElementById("monthlyIntervalDays");
+            yearlyIntervalDaysInput = document.getElementById("yearlyIntervalDays");
+            colNameWeeklyInput = document.getElementById("colNameWeekly");
+            colNameMonthlyInput = document.getElementById("colNameMonthly");
+            colNameYearlyInput = document.getElementById("colNameYearly");
+            saveSettingsBtn = document.getElementById("saveSettingsBtn");
+            overlay = document.getElementById("overlay");
+
+            // Lowest price info panel elements
+            lowestPriceInfoPanel = document.getElementById("lowestPriceInfoPanel");
+            lowestPriceInfoTitle = document.getElementById("lowestPriceInfoTitle");
+            lowestPriceDetails = document.getElementById("lowestPriceDetails");
+            closeLowestPriceInfoBtn = document.getElementById("closeLowestPriceInfoBtn");
+
+            // Table header elements
+            thWeekly = document.getElementById("th-weekly");
+            thMonthly = document.getElementById("th-monthly");
+            thYearly = document.getElementById("th-yearly");
+
+            // Color rule settings elements
+            weeklyPositiveThresholdInput = document.getElementById("weeklyPositiveThreshold");
+            monthlyPositiveThresholdInput = document.getElementById("monthlyPositiveThreshold");
+            yearlyPositiveThresholdInput = document.getElementById("yearlyPositiveThreshold");
+            highPctColorInput = document.getElementById("highPctColor");
+            lowPctColorInput = document.getElementById("lowPctColor");
+
+            // Legend toggle elements
+            legendToggle = document.getElementById('legendToggle');
+            legendContent = document.getElementById('legendContent');
+            legendToggleIcon = document.getElementById('legendToggleIcon');
+
             if (refreshBtn) refreshBtn.addEventListener('click', fetchData); // Refresh button click
             if (addCoinBtn) addCoinBtn.addEventListener('click', addNewCoin); // Add button click
             if (newCoinInput) {
