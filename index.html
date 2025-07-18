@@ -335,6 +335,9 @@
             max-width: 90%;
             width: 800px; /* Ayarlar paneli için daha geniş */
             border: 1px solid var(--border-color);
+            max-height: 90vh; /* Mobil görünümde yüksekliği sınırlamak için eklendi */
+            overflow-y: auto; /* Mobil görünümde kaydırma çubuğu için eklendi */
+            -webkit-overflow-scrolling: touch; /* iOS'ta daha akıcı kaydırma için */
         }
 
         .settings-panel.show {
@@ -457,8 +460,8 @@
             display: block;
         }
 
-        /* Coin Bilgi Paneli Stilleri */
-        .coin-info-panel {
+        /* En Düşük Fiyat Bilgisi Paneli Stilleri (Coin Bilgi Paneli kaldırıldığı için adı değiştirildi) */
+        .lowest-price-info-panel { /* Sadece bu sınıfın adı değiştirildi */
             position: fixed;
             top: 50%;
             left: 50%;
@@ -476,11 +479,11 @@
             border: 1px solid var(--primary-color);
         }
 
-        .coin-info-panel.show {
+        .lowest-price-info-panel.show { /* Sadece bu sınıfın adı değiştirildi */
             display: flex;
         }
 
-        .coin-info-panel h3 {
+        .lowest-price-info-panel h3 { /* Sadece bu sınıfın adı değiştirildi */
             margin-top: 0;
             color: var(--primary-color);
             text-align: center;
@@ -491,14 +494,14 @@
             gap: 10px;
         }
 
-        .coin-info-panel .coin-description {
+        .lowest-price-info-panel .coin-description { /* Sadece bu sınıfın adı değiştirildi */
             font-size: 1rem;
             color: var(--text-color);
             line-height: 1.8;
             text-align: justify;
         }
 
-        .coin-info-panel .close-btn {
+        .lowest-price-info-panel .close-btn { /* Sadece bu sınıfın adı değiştirildi */
             position: absolute;
             top: 15px;
             right: 15px;
@@ -515,31 +518,36 @@
             box-shadow: none;
             transform: none;
         }
-        .coin-info-panel .close-btn:hover {
+        .lowest-price-info-panel .close-btn:hover { /* Sadece bu sınıfın adı değiştirildi */
             background-color: var(--border-color);
             opacity: 1;
         }
 
-        /* Coin Adı Hücresi - Tıklanabilir hale getirildi */
-        .coin-name-cell, .clickable-pct {
+        /* Coin Adı Hücresi Stilleri - Tıklanabilir görünüm kaldırıldı */
+        .coin-name-cell {
+            cursor: default; /* Tıklanabilir imleci kaldırır */
+            font-weight: 600;
+            color: var(--text-color); /* Varsayılan metin rengine döndürüldü */
+            transition: none; /* Geçiş efekti kaldırıldı */
+        }
+        .coin-name-cell:hover {
+            text-decoration: none; /* Alt çizgi kaldırıldı */
+        }
+
+        /* Yüzde değişim hücreleri hala tıklanabilir */
+        .clickable-pct {
             cursor: pointer;
             font-weight: 600;
-            color: var(--primary-color); /* Yüzde hücreleri için de tıklanabilir stil */
+            color: var(--primary-color); 
             transition: color 0.2s ease;
         }
-        .coin-name-cell:hover, .clickable-pct:hover {
+        .clickable-pct:hover {
             text-decoration: underline;
         }
 
-        /* AI Bilgi Simgesi */
+        /* AI Bilgi Simgesi - Artık kullanılmıyor, ancak stil bırakıldı */
         .ai-info-icon {
-            color: #f59e0b; /* Sarı renk */
-            margin-right: 5px;
-            font-size: 0.9em;
-            cursor: pointer;
-        }
-        .ai-info-icon:hover {
-            opacity: 0.8;
+            display: none; /* AI ikonu tamamen gizlendi */
         }
         
         /* Duyarlı Tasarım (Responsive Design) */
@@ -596,7 +604,7 @@
                 margin-bottom: 5px;
             }
 
-            .settings-panel, .coin-info-panel {
+            .settings-panel, .lowest-price-info-panel { /* Sadece bu sınıfın adı değiştirildi */
                 width: 95%; /* Mobil için genişliği ayarlar */
                 padding: 20px;
             }
@@ -615,6 +623,25 @@
             opacity: 0.4;
             background: var(--hover-bg-color);
             border-radius: 8px;
+        }
+
+        /* Lejant İçeriği Gizleme/Gösterme Stilleri */
+        .legend-content-hidden {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .legend-content-show {
+            max-height: 200px; /* Lejant içeriğinin maksimum yüksekliği, içeriğe göre ayarlayın */
+        }
+
+        #legendToggleIcon {
+            transition: transform 0.3s ease;
+        }
+
+        #legendToggleIcon.rotated {
+            transform: rotate(180deg);
         }
     </style>
 </head>
@@ -662,10 +689,15 @@
         </table>
         
         <div class="legend">
-            <strong>Renk Kuralları:</strong>
-            <div class="legend-item" id="legend-high"><span class="legend-color" style="background: var(--success-color);"></span> 1H: >+%5 | 1A: >+%5 | 1Y: >+%5</div>
-            <div class="legend-item" id="legend-low"><span class="legend-color" style="background: var(--warning-color);"></span> 1H: %0 - +%5 | 1A: %0 - +%5 | 1Y: %0 - +%5</div>
-            <div class="legend-item" id="legend-negative"><span class="legend-color" style="background: var(--danger-color);"></span> Herhangi bir negatif değer</div>
+            <strong id="legendToggle" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <span>Renk Kuralları</span>
+                <i class="fas fa-chevron-down" id="legendToggleIcon"></i>
+            </strong>
+            <div id="legendContent" class="legend-content-hidden">
+                <div class="legend-item" id="legend-high"><span class="legend-color" style="background: var(--success-color);"></span> 1H: >+%5 | 1A: >+%5 | 1Y: >+%5</div>
+                <div class="legend-item" id="legend-low"><span class="legend-color" style="background: var(--warning-color);"></span> 1H: %0 - +%5 | 1A: %0 - +%5 | 1Y: %0 - +%5</div>
+                <div class="legend-item" id="legend-negative"><span class="legend-color" style="background: var(--danger-color);"></span> Herhangi bir negatif değer</div>
+            </div>
         </div>
     </div>
     
@@ -752,15 +784,9 @@
         <button id="closeSettingsBtn" class="close-btn" title="Ayarlar panelini kapatır."><i class="fas fa-times"></i></button>
     </div>
 
-    <!-- Coin Bilgi Paneli (Gemini API Destekli) -->
-    <div id="coinInfoPanel" class="coin-info-panel">
-        <h3 id="coinInfoTitle">✨ Coin Bilgisi</h3>
-        <p id="coinDescription" class="coin-description">Yükleniyor...</p>
-        <button id="closeCoinInfoBtn" class="close-btn" title="Coin bilgi panelini kapatır."><i class="fas fa-times"></i></button>
-    </div>
-
+    <!-- Coin Bilgi Paneli (Gemini API Destekli) - Kaldırıldı -->
     <!-- En Düşük Fiyat Bilgisi Paneli -->
-    <div id="lowestPriceInfoPanel" class="coin-info-panel">
+    <div id="lowestPriceInfoPanel" class="lowest-price-info-panel">
         <h3 id="lowestPriceInfoTitle">En Düşük Fiyat Bilgisi</h3>
         <p id="lowestPriceDetails" class="coin-description"></p>
         <button id="closeLowestPriceInfoBtn" class="close-btn" title="En düşük fiyat bilgi panelini kapatır."><i class="fas fa-times"></i></button>
@@ -798,12 +824,6 @@
         const saveSettingsBtn = document.getElementById("saveSettingsBtn");
         const overlay = document.getElementById("overlay");
 
-        // Coin bilgi paneli elementleri
-        const coinInfoPanel = document.getElementById("coinInfoPanel");
-        const coinInfoTitle = document.getElementById("coinInfoTitle");
-        const coinDescription = document.getElementById("coinDescription");
-        const closeCoinInfoBtn = document.getElementById("closeCoinInfoBtn");
-
         // En düşük fiyat bilgi paneli elementleri
         const lowestPriceInfoPanel = document.getElementById("lowestPriceInfoPanel");
         const lowestPriceInfoTitle = document.getElementById("lowestPriceInfoTitle");
@@ -821,7 +841,11 @@
         const yearlyPositiveThresholdInput = document.getElementById("yearlyPositiveThreshold"); // Yeni
         const highPctColorInput = document.getElementById("highPctColor");
         const lowPctColorInput = document.getElementById("lowPctColor");
-        // const negativePctColorInput = document.getElementById("negativePctColor"); // Bu artık kullanılmıyor
+
+        // Lejant toggle elementleri
+        const legendToggle = document.getElementById('legendToggle');
+        const legendContent = document.getElementById('legendContent');
+        const legendToggleIcon = document.getElementById('legendToggleIcon');
 
         let autoRefreshTimer; // Otomatik yenileme zamanlayıcısını tutar
         let currentRefreshInterval = 120000; // Varsayılan 2 dakika (ms cinsinden)
@@ -897,7 +921,8 @@
             new Sortable(priceTable, {
                 handle: '.drag-handle',
                 animation: 150,
-                touchStartThreshold: 5,
+                delay: 200, // Sürüklemeyi başlatmadan önce 200ms gecikme
+                touchStartThreshold: 10, // Sürüklemeyi başlatmak için 10px hareket eşiği
                 onStart: () => {
                     document.body.style.cursor = 'grabbing';
                 },
@@ -941,7 +966,7 @@
 
                     periodData.forEach(d => {
                         const low = parseFloat(d[3]); // Düşük fiyat
-                        const openTime = new Date(d[0]).toLocaleDateString(); // Açılış zamanı
+                        const openTime = new Date(parseFloat(d[0])).toLocaleDateString(); // Açılış zamanı
 
                         if (low < lowestPriceInPeriod) {
                             lowestPriceInPeriod = low;
@@ -1024,7 +1049,7 @@
                 if (result.error) {
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
-                        <td class="coin-name-cell" data-coin="${result.pair}"><span class="ai-info-icon" title="Bu coin hakkında AI bilgisi almak için tıklayın."><i class="fas fa-sparkles"></i></span> ${result.pair.replace("USDT", "/USDT")}</td>
+                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "/USDT")}</td>
                         <td>N/A</td>
                         <td>N/A</td>
                         <td>N/A</td>
@@ -1062,7 +1087,7 @@
                     
                     row.innerHTML = `
                         <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
-                        <td class="coin-name-cell" data-coin="${result.pair}"><span class="ai-info-icon" title="Bu coin hakkında AI bilgisi almak için tıklayın."><i class="fas fa-sparkles"></i></span> ${result.pair.replace("USDT", "/USDT")}</td>
+                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "/USDT")}</td>
                         <td>${formatPrice(result.latestPrice)}</td>
                         <td style="${weeklyColorStyle}" class="clickable-pct" data-period="weekly" data-coin="${result.pair}" data-lowest-price="${result.weeklyLowestPrice}" data-lowest-price-date="${result.weeklyLowestPriceDate}" title="Bu dönemdeki en düşük fiyatı ve tarihini görmek için tıklayın.">${result.weeklyPct}%</td>
                         <td style="${monthlyColorStyle}" class="clickable-pct" data-period="monthly" data-coin="${result.pair}" data-lowest-price="${result.monthlyLowestPrice}" data-lowest-price-date="${result.monthlyLowestPriceDate}" title="Bu dönemdeki en düşük fiyatı ve tarihini görmek için tıklayın.">${result.monthlyPct}%</td>
@@ -1085,13 +1110,13 @@
                 });
             });
 
-            // Coin adı hücrelerine tıklama olay dinleyicileri ekle (Gemini API için)
-            document.querySelectorAll('.coin-name-cell').forEach(cell => {
-                cell.addEventListener('click', function() {
-                    const coinSymbol = this.getAttribute('data-coin');
-                    getSparkleCoinInfo(coinSymbol);
-                });
-            });
+            // Coin adı hücrelerine tıklama olay dinleyicileri kaldırıldı (Gemini API için)
+            // document.querySelectorAll('.coin-name-cell').forEach(cell => {
+            //     cell.addEventListener('click', function() {
+            //         const coinSymbol = this.getAttribute('data-coin');
+            //         getSparkleCoinInfo(coinSymbol);
+            //     });
+            // });
 
             // Yüzde değişim hücrelerine tıklama olay dinleyicileri ekle
             document.querySelectorAll('.clickable-pct').forEach(cell => {
@@ -1341,44 +1366,6 @@
             legendNegative.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.negativeColor};"></span> Herhangi bir negatif değer`;
         }
 
-        // ✨ Gemini API ile coin bilgisi çekme
-        async function getSparkleCoinInfo(coinSymbol) {
-            coinInfoTitle.innerHTML = `✨ ${coinSymbol.replace('USDT', '')} Bilgisi`;
-            coinDescription.textContent = 'Bilgi yükleniyor...';
-            coinInfoPanel.classList.add('show');
-            overlay.classList.add('show');
-
-            const prompt = `Kripto para birimi ${coinSymbol.replace('USDT', '')} hakkında 3-4 cümlelik, kolay anlaşılır bir özet bilgi verin. Amacını ve temel özelliklerini açıklayın.`;
-            
-            let chatHistory = [];
-            chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-            const payload = { contents: chatHistory };
-            const apiKey = ""; // Canvas ortamı otomatik sağlayacaktır
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const result = await response.json();
-
-                if (result.candidates && result.candidates.length > 0 &&
-                    result.candidates[0].content && result.candidates[0].content.parts &&
-                    result.candidates[0].content.parts.length > 0) {
-                    const text = result.candidates[0].content.parts[0].text;
-                    coinDescription.textContent = text;
-                } else {
-                    coinDescription.textContent = 'Bilgi alınamadı. Lütfen daha sonra tekrar deneyin.';
-                    console.error('Gemini API\'den beklenmedik yanıt yapısı:', result);
-                }
-            } catch (error) {
-                coinDescription.textContent = 'Bilgi çekilirken bir hata oluştu. İnternet bağlantınızı kontrol edin.';
-                console.error('Gemini API hatası:', error);
-            }
-        }
-
         // Olay Dinleyicileri
         refreshBtn.addEventListener('click', fetchData); // Yenile butonuna tıklama
         addCoinBtn.addEventListener('click', addNewCoin); // Ekle butonuna tıklama
@@ -1402,12 +1389,6 @@
 
         saveSettingsBtn.addEventListener('click', saveSettings); // Ayarları kaydet butonuna tıklama
 
-        // Coin bilgi paneli kapatma olayları
-        closeCoinInfoBtn.addEventListener('click', () => {
-            coinInfoPanel.classList.remove('show');
-            overlay.classList.remove('show');
-        });
-
         // En düşük fiyat bilgi paneli kapatma olayları
         closeLowestPriceInfoBtn.addEventListener('click', () => {
             lowestPriceInfoPanel.classList.remove('show');
@@ -1417,7 +1398,6 @@
         // Arka plana tıklayınca ayarlar veya bilgi panelini kapat
         overlay.addEventListener('click', () => {
             settingsPanel.classList.remove('show');
-            coinInfoPanel.classList.remove('show');
             lowestPriceInfoPanel.classList.remove('show'); // Yeni panel eklendi
             overlay.classList.remove('show');
         });
@@ -1431,6 +1411,14 @@
                 }
             });
         });
+
+        // Lejantı açma/kapama olay dinleyicisi
+        if (legendToggle && legendContent && legendToggleIcon) {
+            legendToggle.addEventListener('click', () => {
+                legendContent.classList.toggle('legend-content-show');
+                legendToggleIcon.classList.toggle('rotated');
+            });
+        }
 
         // Uygulamayı Başlat
         loadSavedCoins(); // Kaydedilmiş coinleri yükle
