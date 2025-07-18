@@ -1,12 +1,1759 @@
-
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kripto Takipçi + RSI / MACD</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kripto Fiyat Takipçisi</title>
+    <!-- Axios for API requests -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <!-- SortableJS for drag-and-drop table rows -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.14.0/Sortable.min.js"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Variables: General color palette and basic styles for the page */
+        :root {
+            --primary-color: #3b82f6; /* A vibrant blue */
+            --danger-color: #ef4444; /* A soft red */
+            --success-color: #22c55e; /* A vibrant green */
+            --warning-color: #f59e0b; /* A warm orange */
+            --text-color: #374151; /* Readable dark gray */
+            --bg-color: #f3f4f6; /* Light gray background */
+            --card-color: #ffffff; /* White cards */
+            --border-color: #e5e7eb; /* Thin border color */
+            --header-bg-color: #4b5563; /* Dark gray for table header */
+            --hover-bg-color: #f9fafb; /* Very light hover color */
+        }
+        
+        /* General Body Styles */
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; /* Modern font stack */
+            margin: 0;
+            padding: 20px; /* More padding */
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased; /* For smoother font rendering */
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Main Container Styles */
+        .container {
+            max-width: 1100px; /* Wider max-width */
+            margin: 0 auto;
+            background-color: var(--card-color);
+            border-radius: 16px; /* Rounder corners */
+            padding: 30px; /* Inner padding */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08); /* More prominent shadow */
+            overflow-x: auto; /* Horizontal scrollbar when needed */
+        }
+        
+        /* Header Styles */
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 2.2rem; /* Larger heading */
+            margin-bottom: 30px; /* Space below heading */
+            font-weight: 700; /* Thicker font */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        h1 .fas {
+            color: #f59e0b; /* Accent color for header icon */
+        }
+        
+        /* Control Area Styles (Refresh, Add, Settings) */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px; /* Space between elements */
+            margin-bottom: 25px;
+            align-items: center;
+            justify-content: space-between; /* Distribute elements */
+        }
+        
+        /* Button Styles */
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px; /* Wider padding */
+            border-radius: 10px; /* Rounder buttons */
+            cursor: pointer;
+            font-size: 1rem; /* Larger font */
+            white-space: nowrap;
+            font-weight: 600; /* Thicker font */
+            transition: all 0.2s ease; /* Smooth transitions */
+            display: inline-flex;
+            align-items: center;
+            gap: 8px; /* Space between icon and text */
+        }
+        
+        button:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        button:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+        
+        /* Add Coin Area Styles */
+        .add-coin {
+            display: flex;
+            gap: 10px;
+            flex-grow: 1;
+            min-width: 250px; /* Minimum width for input area */
+        }
+        
+        /* Input Field Styles (Text and Number) */
+        input[type="text"], input[type="number"] {
+            padding: 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            flex-grow: 1;
+            font-size: 1rem;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            color: var(--text-color);
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Prominent ring on focus */
+        }
+        
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 25px;
+            font-size: 0.98rem;
+            border-radius: 12px;
+            overflow: hidden; /* Ensures corners are applied */
+            table-layout: fixed; /* Crucial for consistent column widths */
+        }
+        
+        th, td {
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 18px; /* Cell padding */
+            text-align: left;
+            white-space: nowrap; /* Prevent text wrapping in table cells */
+            overflow: hidden; /* Hide overflow content */
+            text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+        }
+        
+        th {
+            background-color: var(--header-bg-color);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10; /* Keeps header at top during scroll */
+        }
+
+        /* Sortable Header Styles */
+        th.sortable {
+            cursor: pointer;
+            position: relative;
+        }
+
+        th.sortable:hover {
+            background-color: #5a6471; /* Darker on hover */
+        }
+
+        th.sortable .sort-indicator {
+            margin-left: 8px;
+            font-size: 0.8em;
+            vertical-align: middle;
+            opacity: 0.6;
+        }
+
+        th.sortable.asc .sort-indicator {
+            opacity: 1;
+            transform: rotate(180deg);
+        }
+
+        th.sortable.desc .sort-indicator {
+            opacity: 1;
+        }
+        
+        tr:not(:last-child) td {
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        tr:hover td {
+            background-color: var(--hover-bg-color);
+        }
+        
+        /* Color Rules (left as is) */
+        .positive-high {
+            color: var(--success-color);
+            font-weight: 600;
+        }
+        
+        .positive-low {
+            color: var(--warning-color);
+            font-weight: 600;
+        }
+        
+        .negative {
+            color: var(--danger-color);
+            font-weight: 600;
+        }
+        
+        /* Update Time Styles */
+        .update-time {
+            text-align: center;
+            margin: 20px 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        /* Drag Handle Styles */
+        .drag-handle {
+            cursor: grab; /* Grab cursor */
+            padding: 0 10px;
+            color: #9ca3af;
+            font-size: 1.2rem;
+            text-align: center;
+            transition: color 0.2s ease;
+            touch-action: none; /* Add this for better mobile drag support */
+        }
+        .drag-handle:active {
+            cursor: grabbing;
+            color: var(--primary-color);
+        }
+        
+        /* Action Buttons (Delete) Styles */
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 26px; /* Smaller button */
+            height: 26px; /* Smaller button */
+            border-radius: 50%;
+            background-color: var(--danger-color); /* Makes button background red */
+            border: none;
+            color: white; /* Makes button text white */
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem; /* Shrink icon size */
+        }
+        
+        .action-btn:hover {
+            background-color: #dc2626; /* Darker red on hover */
+            transform: translateY(-1px); /* Slight lift effect */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+            box-shadow: none;
+        }
+
+        /* Loading Icon Styles */
+        .loading {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Notification Box Styles */
+        .notification {
+            position: fixed;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0px); /* Initial state, no lift */
+            background-color: var(--primary-color);
+            color: white;
+            padding: 14px 25px;
+            border-radius: 10px;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+            z-index: 1003; /* Increased z-index to be above all modals */
+            opacity: 0;
+            visibility: hidden; /* Hidden by default */
+            display: block; /* Keep block so transition can apply, but hidden by visibility */
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            min-width: 200px; /* Ensure it has a minimum visible width */
+            text-align: center; /* Center the text */
+            pointer-events: none; /* Prevent clicks when hidden */
+        }
+        
+        .notification.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-5px); /* Slight upward lift */
+            visibility: visible; /* Make visible for transition */
+            pointer-events: auto; /* Allow clicks when visible */
+        }
+        
+        /* Legend Styles */
+        .legend {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: rgba(0,0,0,0.02);
+            border-radius: 10px;
+            font-size: 0.88rem;
+            border-left: 5px solid var(--primary-color);
+            color: #4b5563;
+        }
+        
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 8px;
+        }
+        
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 3px;
+            margin-right: 8px;
+        }
+
+        /* Updated Settings Panel Styles (Modal) */
+        .settings-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95); /* Slightly scaled down initially */
+            opacity: 0; /* Start hidden for transition */
+            background-color: var(--card-color);
+            padding: 40px; /* More padding */
+            border-radius: 16px; /* Slightly more rounded */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.1); /* Softer, multi-layer shadow */
+            z-index: 1001;
+            display: flex; /* Always flex, control visibility with opacity/transform */
+            flex-direction: column;
+            gap: 25px; /* More space between sections */
+            width: clamp(300px, 90vw, 700px); /* Responsive width for desktop and mobile */
+            border: 1px solid rgba(0,0,0,0.05); /* Very subtle border */
+            max-height: 90vh;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            transition: all 0.3s ease-out; /* Smooth transition for show/hide */
+        }
+
+        .settings-panel.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1); /* Scale up to normal size */
+        }
+
+        .settings-panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 1.6rem; /* Slightly larger */
+            font-weight: 700;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color); /* Separator */
+        }
+
+        /* New Grid Container for Settings */
+        .settings-grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+            gap: 20px 30px; /* Row gap, Column gap */
+            align-items: start; /* Align items to the start of their grid area */
+            padding: 15px; /* Padding around the grid content */
+            background-color: rgba(0,0,0,0.02); /* Light background for the grid area */
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        /* Headers within the new grid container */
+        .settings-grid-container .grid-header {
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px; /* Space below headers */
+            grid-column: span 1; /* Each header spans 1 column */
+        }
+        
+        /* Individual setting items within the grid */
+        .setting-grid-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .setting-grid-item:last-of-type {
+            border-bottom: none; /* No border for the last item in its column */
+        }
+
+        .setting-grid-item label {
+            font-weight: 500;
+            flex-shrink: 0;
+            margin-right: 15px;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+
+        .settings-grid-container input[type="number"],
+        .settings-grid-container input[type="text"] {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            font-size: 0.95rem;
+            color: var(--text-color);
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .settings-grid-container input[type="checkbox"] {
+            transform: scale(1.2);
+            margin-right: 5px;
+        }
+
+        .settings-grid-container input[type="color"] {
+            width: 60px;
+            height: 35px;
+            padding: 3px;
+            border-radius: 8px;
+        }
+
+        /* For the color rule settings that span full width */
+        .settings-full-width-section {
+            grid-column: 1 / -1; /* Spans all columns */
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding-top: 15px; /* Add some top padding */
+            border-top: 1px solid var(--border-color); /* Separator from above grid */
+        }
+
+        .settings-full-width-section .setting-item {
+            border-bottom: 1px dashed var(--border-color);
+        }
+        .settings-full-width-section .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .settings-panel button {
+            width: auto;
+            align-self: center; /* Center the save button */
+            margin-top: 30px; /* More space above button */
+            padding: 14px 25px; /* Larger button */
+            font-size: 1.05rem;
+        }
+
+        .settings-panel .close-btn {
+            position: absolute;
+            top: 20px; /* Adjust position */
+            right: 20px; /* Adjust position */
+            background: none;
+            color: var(--text-color);
+            width: 35px; /* Larger hit area */
+            height: 35px; /* Larger hit area */
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem; /* Larger close icon */
+            box-shadow: none;
+            transform: none;
+        }
+        .settings-panel .close-btn:hover {
+            background-color: var(--border-color);
+            opacity: 1;
+        }
+
+        /* Info icons for settings - Adjusted for click behavior */
+        .info-icon {
+            color: #6b7280;
+            font-size: 0.9em;
+            margin-left: 5px;
+            cursor: pointer; /* Changed to pointer for click */
+            pointer-events: auto; /* Ensure it's always clickable */
+            flex-shrink: 0; /* Prevent icon from shrinking */
+        }
+        .info-icon:hover {
+            color: var(--primary-color); /* Still change color on hover */
+        }
+
+
+        /* Overlay for Modals */
+        #overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden; /* Hidden by default */
+            transition: opacity 0.3s ease-out; /* Smooth transition for overlay */
+            pointer-events: none; /* Crucial: Do not block clicks when hidden */
+        }
+        #overlay.show {
+            opacity: 1;
+            visibility: visible; /* Make visible for transition */
+            pointer-events: auto; /* Allow clicks when visible */
+        }
+
+        /* Updated Lowest Price Info Panel Styles */
+        .lowest-price-info-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95); /* Initial state for transition */
+            opacity: 0; /* Start hidden for transition */
+            background-color: var(--card-color);
+            padding: 40px; /* Consistent padding */
+            border-radius: 16px; /* Consistent rounding */
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15), 0 5px 15px rgba(0,0,0,0.1); /* Consistent shadow */
+            z-index: 1002;
+            display: flex; /* Always flex, control visibility with opacity/transform */
+            flex-direction: column;
+            gap: 20px;
+            max-width: 90%;
+            width: 550px; /* Slightly wider for better content display */
+            border: 1px solid var(--primary-color); /* Primary color border */
+            transition: all 0.3s ease-out; /* Smooth transition for show/hide */
+        }
+
+        .lowest-price-info-panel.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1); /* Scale up to normal size */
+        }
+
+        .lowest-price-info-panel h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+            text-align: center;
+            font-size: 2rem; /* Slightly larger */
+            font-weight: 700;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lowest-price-info-panel .coin-description {
+            font-size: 1.05rem; /* Slightly larger font */
+            color: var(--text-color);
+            line-height: 1.7;
+            text-align: center; /* Center text for better readability in pop-up */
+        }
+
+        .lowest-price-info-panel .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            color: var(--text-color);
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: none;
+            transform: none;
+        }
+        .lowest-price-info-panel .close-btn:hover {
+            background-color: var(--border-color);
+            opacity: 1;
+        }
+
+        /* Coin Name Cell Styles - Clickable appearance removed */
+        .coin-name-cell {
+            cursor: default; /* Removes clickable cursor */
+            font-weight: 600;
+            color: var(--text-color); /* Reverted to default text color */
+            transition: none; /* Removed transition effect */
+        }
+        .coin-name-cell:hover {
+            text-decoration: none; /* Removed underline */
+        }
+
+        /* Percentage change cells are still clickable */
+        .clickable-pct {
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--primary-color); 
+            transition: color 0.2s ease;
+        }
+        .clickable-pct:hover {
+            text-decoration: underline;
+        }
+
+        /* AI Info Icon - No longer used, but style kept */
+        .ai-info-icon {
+            display: none; /* AI icon completely hidden */
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            .container {
+                padding: 20px;
+                border-radius: 8px;
+                box-shadow: none;
+            }
+            
+            h1 {
+                font-size: 1.6rem;
+                margin-bottom: 20px;
+            }
+            
+            /* Table specific adjustments for mobile */
+            table {
+                table-layout: fixed; /* Ensure fixed layout for mobile */
+                width: 100%;
+            }
+            th, td {
+                padding: 8px 5px; /* Reduced padding */
+                font-size: 0.75rem; /* Smaller font size */
+                white-space: nowrap; /* Prevent text wrapping in table cells */
+                overflow: hidden; /* Hide overflow content */
+                text-overflow: ellipsis; /* Add ellipsis for overflowing text */
+            }
+            /* Specific column widths for mobile */
+            table th:nth-child(1), table td:nth-child(1) { /* Drag handle */
+                width: 30px;
+                min-width: 30px;
+            }
+            table th:nth-child(2), table td:nth-child(2) { /* Coin */
+                width: 25%; /* Give more space to coin name */
+                min-width: 70px;
+            }
+            table th:nth-child(3), table td:nth-child(3) { /* Price */
+                width: 25%;
+                min-width: 70px;
+            }
+            table th:nth-child(4), table td:nth-child(4), /* 1H % */
+            table th:nth-child(5), table td:nth-child(5), /* 1A % */
+            table th:nth-child(6), table td:nth-child(6) { /* 1Y % */
+                width: 18%; /* Increased width for percentages */
+                min-width: 60px; /* Increased min-width */
+                white-space: normal; /* Allow wrapping for percentages */
+            }
+            table th:nth-child(7), table td:nth-child(7) { /* Delete */
+                width: 40px;
+                min-width: 40px;
+            }
+            
+            .drag-handle {
+                padding: 0 5px;
+                font-size: 1rem;
+            }
+            
+            .controls {
+                flex-direction: row; /* Keep buttons in a row */
+                justify-content: space-around; /* Distribute them evenly */
+                align-items: center;
+                gap: 10px; /* Small gap between buttons */
+            }
+
+            /* Target refresh and settings buttons specifically for icon-only style */
+            #refreshBtn, #settingsBtn {
+                padding: 10px;
+                width: 40px; /* Fixed width for circular buttons */
+                height: 40px; /* Fixed height for circular buttons */
+                border-radius: 50%; /* Make them circular */
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0; /* Prevent shrinking */
+            }
+
+            #refreshBtn .button-text,
+            #settingsBtn .button-text {
+                display: none; /* Hide text for refresh and settings buttons */
+            }
+
+            #refreshBtn .fas,
+            #settingsBtn .fas {
+                margin-right: 0; /* Remove margin next to hidden text */
+                font-size: 1.1rem; /* Adjust icon size */
+            }
+
+            /* Adjust add-coin for mobile */
+            .add-coin {
+                width: 100%;
+                order: -1; /* Move add coin section to the top of controls */
+                flex-direction: row; /* Keep input and button side by side */
+                margin-bottom: 15px;
+            }
+            .add-coin input {
+                padding: 10px 12px;
+                font-size: 0.9rem;
+            }
+            #addCoinBtn { /* Target add button specifically */
+                padding: 10px 15px;
+                width: auto;
+                height: auto;
+                border-radius: 10px;
+                flex-shrink: 0;
+            }
+            #addCoinBtn .button-text {
+                display: inline; /* Show "Ekle" text for add button */
+            }
+            #addCoinBtn .fas {
+                margin-right: 5px; /* Keep margin for add button icon */
+            }
+
+            /* Ensure the update-time is styled correctly at the bottom */
+            .update-time {
+                margin-top: 20px; /* Add some space above it */
+                margin-bottom: 0; /* Remove bottom margin if it's the last element before legend */
+            }
+
+            .settings-panel {
+                padding: 20px; /* Adjust padding for mobile */
+            }
+            /* Responsive settings grid for mobile */
+            .settings-grid-container {
+                grid-template-columns: 1fr; /* Single column on mobile */
+                gap: 20px; /* Only row gap */
+                padding: 10px; /* Smaller padding for grid container */
+            }
+            .settings-grid-container .grid-header {
+                margin-bottom: 0; /* Remove extra margin on mobile */
+                font-size: 1.1rem; /* Smaller header font */
+            }
+            .setting-item label {
+                font-size: 0.9rem;
+                margin-right: 10px;
+            }
+            .settings-grid-container input[type="number"],
+            .settings-grid-container input[type="text"] {
+                padding: 6px 10px;
+                font-size: 0.85rem;
+            }
+            .settings-grid-container input[type="color"] {
+                width: 45px;
+                height: 25px;
+            }
+            .settings-full-width-section {
+                padding-top: 0; /* Remove top padding on mobile */
+                border-top: none; /* Remove border on mobile */
+            }
+            .settings-panel button {
+                padding: 12px 20px;
+                font-size: 0.95rem;
+            }
+            .settings-panel .close-btn {
+                top: 10px;
+                right: 10px;
+                width: 30px;
+                height: 30px;
+                font-size: 1.3rem;
+            }
+
+            /* Adjust coin column width for mobile */
+            table th:nth-child(2), table td:nth-child(2) { /* Coin column (2nd child) */
+                width: 25%; /* Reduced width for coin column */
+                min-width: 80px; /* Minimum width to prevent excessive shrinking */
+            }
+        }
+        
+        /* Drag Ghost Style */
+        .sortable-ghost {
+            opacity: 0.4;
+            background: var(--hover-bg-color);
+            border-radius: 8px;
+        }
+
+        /* Legend Content Hide/Show Styles */
+        .legend-content-hidden {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+
+        .legend-content-show {
+            max-height: 200px; /* Max height for legend content, adjust as needed */
+        }
+
+        #legendToggleIcon {
+            transition: transform 0.3s ease;
+        }
+
+        #legendToggleIcon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
 </head>
 <body>
-    <h1>Dosya hazırlanıyor...</h1>
+    <div class="container">
+        <h1 title="Kripto para fiyatlarını takip edin ve kişiselleştirilmiş ayarlarınızı yapın."><i class="fas fa-coins"></i> Kripto Fiyat Takipçisi</h1>
+        
+        <div class="controls">
+            <button id="refreshBtn" title="Tablodaki tüm coinlerin fiyatlarını ve yüzde değişimlerini günceller.">
+                <i class="fas fa-sync-alt"></i><span class="button-text">Fiyatları Yenile</span>
+            </button>
+            <div class="add-coin">
+                <input type="text" id="newCoinInput" placeholder="Coin ekle (örn. BTC,ETH,SOL)" title="Yeni bir kripto para birimi eklemek için sembolünü girin (örn. BTC). Birden fazla coin eklemek için virgül kullanın (örn. JUV,ACM,PORTO).">
+                <button id="addCoinBtn" title="Girilen coin(leri) listeye ekler."><i class="fas fa-plus"></i> <span class="button-text">Ekle</span></button>
+            </div>
+            <!-- New settings button -->
+            <button id="settingsBtn" title="Uygulama ayarlarını değiştirmek için tıklayın."><i class="fas fa-cog"></i> <span class="button-text">Ayarlar</span></button>
+        </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <!-- Reset Sort Button - Placed at the beginning of the table header -->
+                    <th style="width: 40px; text-align: center;">
+                        <button id="resetSortBtn" title="Tablo sıralamasını orijinal eklenme sırasına sıfırlar." style="background: none; border: none; padding: 0; margin: 0; cursor: pointer; color: white; font-size: 1.2rem;">
+                            <i class="fas fa-undo"></i>
+                        </button>
+                    </th>
+                    <th class="sortable" data-sort-key="pair" title="Coin sembolüne göre sıralar.">Coin <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="latestPrice" title="Güncel fiyata göre sıralar.">Fiyat <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="weeklyPct" id="th-weekly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1H % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="monthlyPct" id="th-monthly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1A % <span class="sort-indicator"></span></th>
+                    <th class="sortable" data-sort-key="yearlyPct" id="th-yearly" title="Belirlenen gün aralığındaki yüzde değişime göre sıralar.">1Y % <span class="sort-indicator"></span></th>
+                    <th style="width: 50px;" title="Coin'i listeden kaldırmak için tıklayın.">Sil</th>
+                </tr>
+            </thead>
+            <tbody id="priceTable">
+            </tbody>
+        </table>
+
+        <div class="update-time">
+            <i class="far fa-clock"></i>
+            <span title="Fiyatların en son ne zaman güncellendiğini gösterir.">Son güncelleme: <span id="updateTime">Hiçbir zaman</span></span>
+        </div>
+        
+        <div class="legend">
+            <strong id="legendToggle" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
+                <span>Renk Kuralları</span>
+                <i class="fas fa-chevron-down" id="legendToggleIcon"></i>
+            </strong>
+            <div id="legendContent" class="legend-content-hidden">
+                <div class="legend-item" id="legend-high"><span class="legend-color" style="background: var(--success-color);"></span> 1H: >+%5 | 1A: >+%5 | 1Y: >+%5</div>
+                <div class="legend-item" id="legend-low"><span class="legend-color" style="background: var(--warning-color);"></span> 1H: %0 - +%5 | 1A: %0 - +%5 | 1Y: %0 - +%5</div>
+                <div class="legend-item" id="legend-negative"><span class="legend-color" style="background: var(--danger-color);"></span> Herhangi bir negatif değer</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+
+    <!-- Settings Panel (Modal) -->
+    <div id="settingsPanel" class="settings-panel">
+        <h3>Ayarlar</h3>
+        <div class="setting-item">
+            <label for="autoRefreshToggle">Otomatik Yenilemeyi Etkinleştir:</label>
+            <i class="fas fa-info-circle info-icon" data-info="Fiyatların otomatik olarak güncellenip güncellenmeyeceğini belirler."></i>
+            <input type="checkbox" id="autoRefreshToggle">
+        </div>
+        <div class="setting-item">
+            <label for="refreshInterval">Yenileme Aralığı (saniye):</label>
+            <i class="fas fa-info-circle info-icon" data-info="Otomatik yenileme etkinse, fiyatların kaç saniyede bir güncelleneceğini belirler."></i>
+            <input type="number" id="refreshInterval" value="120" min="10" step="10">
+        </div>
+        <hr style="border-color: var(--border-color); margin: 15px 0;">
+        
+        <div class="settings-grid-container">
+            <!-- Headers for each section in the grid -->
+            <div class="grid-header"><h3>Zaman Aralığı Ayarları</h3></div>
+            <div class="grid-header"><h3>Kolon Adı Ayarları</h3></div>
+            <div class="grid-header"><h3>Renk Kuralı Ayarları</h3></div>
+
+            <!-- Row 1: 1H settings across columns -->
+            <div class="setting-grid-item">
+                <label for="weeklyIntervalDays">1H Değişim (Gün):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1H (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i>
+                <input type="number" id="weeklyIntervalDays" value="7" min="1" step="1">
+            </div>
+            <div class="setting-grid-item">
+                <label for="colNameWeekly">1H Kolon Adı:</label>
+                <i class="fas fa-info-circle info-icon" data-info="1H (%) kolonunun tablo başlığındaki adını değiştirir."></i>
+                <input type="text" id="colNameWeekly" value="1H %">
+            </div>
+            <div class="setting-grid-item">
+                <label for="weeklyPositiveThreshold">1H Pozitif Eşik (%):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1H değişimi için pozitif eşik değeri. Bu değerin üzerindeki yüzdeler 'Yüksek Pozitif' renginde, altındakiler 'Düşük Pozitif' renginde gösterilir."></i>
+                <input type="number" id="weeklyPositiveThreshold" value="5" min="0" step="1">
+            </div>
+
+            <!-- Row 2: 1A settings across columns -->
+            <div class="setting-grid-item">
+                <label for="monthlyIntervalDays">1A Değişim (Gün):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1A (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i>
+                <input type="number" id="monthlyIntervalDays" value="30" min="1" step="1">
+            </div>
+            <div class="setting-grid-item">
+                <label for="colNameMonthly">1A Kolon Adı:</label>
+                <i class="fas fa-info-circle info-icon" data-info="1A (%) kolonunun tablo başlığındaki adını değiştirir."></i>
+                <input type="text" id="colNameMonthly" value="1A %">
+            </div>
+            <div class="setting-grid-item">
+                <label for="monthlyPositiveThreshold">1A Pozitif Eşik (%):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1A değişimi için pozitif eşik değeri."></i>
+                <input type="number" id="monthlyPositiveThreshold" value="10" min="0" step="1">
+            </div>
+
+            <!-- Row 3: 1Y settings across columns -->
+            <div class="setting-grid-item">
+                <label for="yearlyIntervalDays">1Y Değişim (Gün):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1Y (%) kolonundaki değişimin kaç günlük veriye göre hesaplanacağını belirler."></i>
+                <input type="number" id="yearlyIntervalDays" value="365" min="1" step="1">
+            </div>
+            <div class="setting-grid-item">
+                <label for="colNameYearly">1Y Kolon Adı:</label>
+                <i class="fas fa-info-circle info-icon" data-info="1Y (%) kolonunun tablo başlığındaki adını değiştirir."></i>
+                <input type="text" id="colNameYearly" value="1Y %">
+            </div>
+            <div class="setting-grid-item">
+                <label for="yearlyPositiveThreshold">1Y Pozitif Eşik (%):</label>
+                <i class="fas fa-info-circle info-icon" data-info="1Y değişimi için pozitif eşik değeri."></i>
+                <input type="number" id="yearlyPositiveThreshold" value="20" min="0" step="1">
+            </div>
+
+            <!-- Remaining Renk Kuralı Ayarları below, spanning full width -->
+            <div class="settings-full-width-section">
+                <div class="setting-item">
+                    <label for="highPctColor">Yüksek Pozitif Renk:</label>
+                    <i class="fas fa-info-circle info-icon" data-info="Pozitif eşiğin üzerindeki yüzdeler için kullanılacak renk."></i>
+                    <input type="color" id="highPctColor" value="#22c55e">
+                </div>
+                <div class="setting-item">
+                    <label for="lowPctColor">Düşük Pozitif Renk:</label>
+                    <i class="fas fa-info-circle info-icon" data-info="Pozitif eşiğin altındaki (ve sıfırın üzerindeki) yüzdeler için kullanılacak renk."></i>
+                    <input type="color" id="lowPctColor" value="#f59e0b">
+                </div>
+                <div class="setting-item">
+                    <label>Negatif Renk:</label>
+                    <i class="fas fa-info-circle info-icon" data-info="Tüm negatif yüzde değişimleri için sabit kırmızı renk kullanılır."></i>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="background-color: #ef4444; width: 30px; height: 20px; border-radius: 3px; display: inline-block; vertical-align: middle;"></span>
+                        <span style="color: #ef4444;">Sabit Kırmızı</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="saveSettingsBtn" title="Ayarları kaydeder ve tabloyu günceller.">Ayarları Kaydet</button>
+        <button id="closeSettingsBtn" class="close-btn" title="Ayarlar panelini kapatır."><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Lowest Price Info Panel -->
+    <div id="lowestPriceInfoPanel" class="lowest-price-info-panel">
+        <h3 id="lowestPriceInfoTitle">En Düşük Fiyat Bilgisi</h3>
+        <p id="lowestPriceDetails" class="coin-description"></p>
+        <button id="closeLowestPriceInfoBtn" class="close-btn" title="En düşük fiyat bilgi panelini kapatır."><i class="fas fa-times"></i></button>
+    </div>
+
+    <!-- Modal Background -->
+    <div id="overlay" class="overlay"></div>
+
+    <script>
+        // DOM Element References
+        let pairs = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]; // Default coins
+        let allCoinData = []; // Stores all coin data for sorting
+
+        // Get elements after DOM is fully loaded
+        let updateTime;
+        let priceTable;
+        let refreshBtn;
+        let addCoinBtn;
+        let newCoinInput;
+        // refreshIcon is no longer a separate element, it's part of refreshBtn
+        let notification;
+        let resetSortBtn;
+
+        // Settings panel elements
+        let settingsBtn;
+        let settingsPanel;
+        let closeSettingsBtn;
+        let autoRefreshToggle;
+        let refreshIntervalInput;
+        let weeklyIntervalDaysInput;
+        let monthlyIntervalDaysInput;
+        let yearlyIntervalDaysInput;
+        let colNameWeeklyInput;
+        let colNameMonthlyInput;
+        let colNameYearlyInput;
+        let saveSettingsBtn;
+        let overlay;
+
+        // Lowest price info panel elements
+        let lowestPriceInfoPanel;
+        let lowestPriceInfoTitle;
+        let lowestPriceDetails;
+        let closeLowestPriceInfoBtn;
+
+        // Table header elements
+        let thWeekly;
+        let thMonthly;
+        let thYearly;
+
+        // Color rule settings elements
+        let weeklyPositiveThresholdInput;
+        let monthlyPositiveThresholdInput;
+        let yearlyPositiveThresholdInput;
+        let highPctColorInput;
+        let lowPctColorInput;
+
+        // Legend toggle elements
+        let legendToggle;
+        let legendContent;
+        let legendToggleIcon;
+
+
+        let autoRefreshTimer; // Holds the auto-refresh timer
+        let currentRefreshInterval = 120000; // Default 2 minutes (in ms)
+
+        let currentSortColumn = 'pair'; // Default sort column
+        let currentSortOrder = 'asc'; // Default sort order
+
+        // Time interval settings
+        let customIntervals = {
+            weekly: 7,
+            monthly: 30,
+            yearly: 365
+        };
+
+        // Column name settings
+        let customColumnNames = {
+            weekly: "1H %",
+            monthly: "1A %",
+            yearly: "1Y %"
+        };
+
+        // Dynamic color rule settings
+        let dynamicColorRules = {
+            weeklyPositiveThreshold: 5, // Threshold for 1H
+            monthlyPositiveThreshold: 10, // Threshold for 1A
+            yearlyPositiveThreshold: 20, // Threshold for 1Y
+            highColor: '#22c55e',
+            lowColor: '#f59e0b',
+            negativeColor: '#ef4444' // Negative color is fixed
+        };
+
+
+        // Load saved coins from localStorage
+        function loadSavedCoins() {
+            const savedCoins = localStorage.getItem('crypto-tracker-coins');
+            if (savedCoins) {
+                pairs = JSON.parse(savedCoins);
+            }
+        }
+
+        // Save coins to localStorage
+        function saveCoins() {
+            localStorage.setItem('crypto-tracker-coins', JSON.stringify(pairs));
+        }
+
+        // Show notification
+        function showNotification(message, isSuccess = true) {
+            console.log("Showing notification:", message, "isSuccess:", isSuccess); // Added for debugging
+            if (notification) {
+                notification.textContent = message;
+                notification.style.backgroundColor = isSuccess ? 'var(--primary-color)' : 'var(--danger-color)';
+                
+                // Make it visible immediately for transition to start
+                notification.style.display = 'block';
+                notification.style.visibility = 'visible';
+                notification.classList.add('show');
+
+                // Set a timeout to remove the 'show' class after 3 seconds
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    // After transition completes, hide it completely
+                    setTimeout(() => {
+                        notification.style.display = 'none';
+                        notification.style.visibility = 'hidden';
+                    }, 400); // Match this with CSS transition duration (0.4s)
+                    console.log("Hiding notification:", message);
+                }, 3000);
+            }
+        }
+
+        // Format price
+        function formatPrice(price) {
+            const num = parseFloat(price);
+            if (isNaN(num)) return 'N/A';
+            
+            // Use toFixed for initial precision based on magnitude
+            let fixedPrice;
+            if (num < 1) {
+                fixedPrice = num.toFixed(6); // Max 6 decimal places for very small numbers
+            } else if (num < 10) {
+                fixedPrice = num.toFixed(4); // Max 4 decimal places for small numbers
+            } else if (num < 1000) {
+                fixedPrice = num.toFixed(2); // Max 2 decimal places for medium numbers
+            } else {
+                fixedPrice = num.toFixed(2); // Start with 2 for large numbers, then remove trailing zeros
+            }
+
+            // Remove trailing zeros after the decimal point
+            let cleanedPrice = fixedPrice;
+            if (cleanedPrice.includes('.')) {
+                cleanedPrice = cleanedPrice.replace(/\.?0+$/, '');
+            }
+
+            // Now apply locale string for thousands separator if applicable
+            const finalNum = parseFloat(cleanedPrice); // Convert back to number for toLocaleString
+            if (finalNum >= 1000) {
+                // If there's a decimal part after cleaning, preserve its length
+                const parts = cleanedPrice.split('.');
+                if (parts.length > 1) {
+                    return finalNum.toLocaleString('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: parts[1].length // Use actual decimal length
+                    });
+                } else {
+                    return finalNum.toLocaleString('en-US', {
+                        maximumFractionDigits: 0 // No decimals for whole numbers
+                    });
+                }
+            } else {
+                return cleanedPrice; // For numbers less than 1000, return the cleaned string directly
+            }
+        }
+
+        // Initialize sortable table
+        function initSortable() {
+            if (priceTable) { // Ensure priceTable exists
+                new Sortable(priceTable, {
+                    handle: '.drag-handle',
+                    animation: 150,
+                    delay: 200, // 200ms delay before starting drag
+                    touchStartThreshold: 10, // 10px movement threshold to start drag
+                    onStart: () => {
+                        document.body.style.cursor = 'grabbing';
+                    },
+                    onEnd: () => {
+                        document.body.style.cursor = '';
+                        const rows = priceTable.querySelectorAll('tr');
+                        const newOrder = [];
+                        rows.forEach(row => {
+                            const coin = row.getAttribute('data-coin');
+                            if (coin) newOrder.push(coin);
+                        });
+                        pairs = newOrder;
+                        saveCoins();
+                        showNotification('Coin order updated!');
+                    }
+                });
+            }
+        }
+
+        // Fetch data for a single coin
+        async function fetchCoinData(pair) {
+            try {
+                // Fetch data for the longest interval specified by the user from Binance API
+                const limitDays = Math.max(customIntervals.weekly, customIntervals.monthly, customIntervals.yearly);
+                const response = await axios.get(`https://api.binance.com/api/v3/klines?symbol=${pair}&interval=1d&limit=${limitDays}`);
+                const data = response.data;
+                
+                // Return error if no data or insufficient data
+                if (!data || data.length === 0) {
+                    throw new Error("Insufficient data found.");
+                }
+
+                const latestPrice = parseFloat(data[data.length - 1][4]); // Closing price
+                
+                // Calculate weekly, monthly, and yearly percentage changes
+                // Slice the correct range based on user settings
+                const calculatePercentageChange = (days, historicalData) => {
+                    if (historicalData.length < days) return { pct: 'N/A', lowestPrice: 'N/A', lowestPriceDate: 'N/A' };
+                    const periodData = historicalData.slice(-days);
+                    let lowestPriceInPeriod = Infinity;
+                    let lowestPriceDate = 'N/A';
+
+                    periodData.forEach(d => {
+                        const low = parseFloat(d[3]); // Low price
+                        const openTime = new Date(parseFloat(d[0])).toLocaleDateString(); // Opening time
+
+                        if (low < lowestPriceInPeriod) {
+                            lowestPriceInPeriod = low;
+                            lowestPriceDate = openTime;
+                        }
+                    });
+                    
+                    if (lowestPriceInPeriod === 0 || lowestPriceInPeriod === Infinity) return { pct: 'N/A', lowestPrice: 'N/A', lowestPriceDate: 'N/A' };
+                    
+                    const pct = ((latestPrice - lowestPriceInPeriod) / lowestPriceInPeriod * 100).toFixed(2);
+                    return { pct, lowestPrice: lowestPriceInPeriod.toFixed(6), lowestPriceDate }; // Return an object
+                };
+
+                const weeklyData = calculatePercentageChange(customIntervals.weekly, data);
+                const monthlyData = calculatePercentageChange(customIntervals.monthly, data);
+                const yearlyData = calculatePercentageChange(customIntervals.yearly, data);
+                
+                return {
+                    pair,
+                    latestPrice,
+                    weeklyPct: weeklyData.pct,
+                    weeklyLowestPrice: weeklyData.lowestPrice,
+                    weeklyLowestPriceDate: weeklyData.lowestPriceDate,
+                    monthlyPct: monthlyData.pct,
+                    monthlyLowestPrice: monthlyData.lowestPrice,
+                    monthlyLowestPriceDate: monthlyData.lowestPriceDate,
+                    yearlyPct: yearlyData.pct,
+                    yearlyLowestPrice: yearlyData.lowestPrice,
+                    yearlyLowestPriceDate: yearlyData.lowestPriceDate,
+                    error: null
+                };
+            } catch (error) {
+                console.error(`Error fetching data for ${pair}:`, error);
+                return {
+                    pair,
+                    latestPrice: null,
+                    weeklyPct: null,
+                    weeklyLowestPrice: null,
+                    weeklyLowestPriceDate: null,
+                    monthlyPct: null,
+                    monthlyLowestPrice: null,
+                    monthlyLowestPriceDate: null,
+                    yearlyPct: null,
+                    yearlyLowestPrice: null,
+                    yearlyLowestPriceDate: null,
+                    error: error.message
+                };
+            }
+        }
+
+        // Fetch data for all coins and update the table
+        async function fetchData() {
+            // Show loading animation on the refresh button
+            if (refreshBtn) {
+                refreshBtn.innerHTML = '<div class="loading"></div><span class="button-text">Yenileniyor...</span>';
+            }
+
+            if (priceTable) {
+                priceTable.innerHTML = ''; // Clear the table
+            }
+            
+            const promises = pairs.map(pair => fetchCoinData(pair));
+            allCoinData = await Promise.all(promises); // Fetch all coin data in parallel and store
+            
+            // Sort data according to current sort settings
+            sortData(currentSortColumn, currentSortOrder, false); // Sort without re-rendering the table
+            
+            if (updateTime) {
+                updateTime.textContent = new Date().toLocaleString(); // Show last updated time
+            }
+            showNotification('Fiyatlar başarıyla güncellendi!');
+
+            // Restore refresh button text
+            if (refreshBtn) {
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i><span class="button-text">Fiyatları Yenile</span>';
+            }
+        }
+
+        // Render the table based on the provided data
+        function renderTable(dataToRender) {
+            if (!priceTable) return; // Ensure priceTable exists before rendering
+
+            priceTable.innerHTML = ''; // Clear the table
+
+            // Update column headers
+            if (thWeekly) thWeekly.innerHTML = `${customColumnNames.weekly} <span class="sort-indicator"></span>`;
+            if (thMonthly) thMonthly.innerHTML = `${customColumnNames.monthly} <span class="sort-indicator"></span>`;
+            if (thYearly) thYearly.innerHTML = `${customColumnNames.yearly} <span class="sort-indicator"></span>`;
+            
+            dataToRender.forEach(result => {
+                const row = document.createElement("tr");
+                row.setAttribute('data-coin', result.pair);
+                
+                if (result.error) {
+                    row.innerHTML = `
+                        <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
+                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "")}</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove this coin from the list."><i class="fas fa-times"></i></button></td>
+                    `;
+                } else {
+                    // Apply color rules
+                    let weeklyColorStyle = '';
+                    if (parseFloat(result.weeklyPct) < 0) {
+                        weeklyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.weeklyPct) >= dynamicColorRules.weeklyPositiveThreshold) { // Use specific threshold
+                        weeklyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else { // >= 0 and < positiveThreshold
+                        weeklyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
+
+                    let monthlyColorStyle = '';
+                    if (parseFloat(result.monthlyPct) < 0) {
+                        monthlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.monthlyPct) >= dynamicColorRules.monthlyPositiveThreshold) { // Use specific threshold
+                        monthlyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else {
+                        monthlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
+
+                    let yearlyColorStyle = '';
+                    if (parseFloat(result.yearlyPct) < 0) {
+                        yearlyColorStyle = `color: ${dynamicColorRules.negativeColor};`;
+                    } else if (parseFloat(result.yearlyPct) >= dynamicColorRules.yearlyPositiveThreshold) { // Use specific threshold
+                        yearlyColorStyle = `color: ${dynamicColorRules.highColor};`;
+                    } else {
+                        yearlyColorStyle = `color: ${dynamicColorRules.lowColor};`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="drag-handle"><i class="fas fa-grip-lines"></i></td>
+                        <td class="coin-name-cell" data-coin="${result.pair}">${result.pair.replace("USDT", "")}</td>
+                        <td>${formatPrice(result.latestPrice)}</td>
+                        <td style="${weeklyColorStyle}" class="clickable-pct" data-period="weekly" data-coin="${result.pair}" data-lowest-price="${result.weeklyLowestPrice}" data-lowest-price-date="${result.weeklyLowestPriceDate}" title="Click to see the lowest price and date for this period.">${result.weeklyPct}%</td>
+                        <td style="${monthlyColorStyle}" class="clickable-pct" data-period="monthly" data-coin="${result.pair}" data-lowest-price="${result.monthlyLowestPrice}" data-lowest-price-date="${result.monthlyLowestPriceDate}" title="Click to see the lowest price and date for this period.">${result.monthlyPct}%</td>
+                        <td style="${yearlyColorStyle}" class="clickable-pct" data-period="yearly" data-coin="${result.pair}" data-lowest-price="${result.yearlyLowestPrice}" data-lowest-price-date="${result.yearlyLowestPriceDate}" title="Click to see the lowest price and date for this period.">${result.yearlyPct}%</td>
+                        <td><button class="action-btn remove-btn" data-coin="${result.pair}" title="Remove this coin from the list."><i class="fas fa-times"></i></button></td>
+                    `;
+                }
+                
+                priceTable.appendChild(row);
+            });
+            
+            // Add event listeners to remove buttons
+            document.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const coinToRemove = this.getAttribute('data-coin');
+                    pairs = pairs.filter(coin => coin !== coinToRemove);
+                    saveCoins(); // Save coin list
+                    fetchData(); // Re-render table
+                    showNotification(`${coinToRemove.replace("USDT", "")} kaldırıldı.`);
+                });
+            });
+
+            // Add event listeners to percentage change cells
+            document.querySelectorAll('.clickable-pct').forEach(cell => {
+                cell.addEventListener('click', function() {
+                    const coin = this.getAttribute('data-coin').replace('USDT', '');
+                    const period = this.getAttribute('data-period');
+                    const lowestPrice = this.getAttribute('data-lowest-price');
+                    const lowestPriceDate = this.getAttribute('data-lowest-price-date');
+                    showLowestPriceInfo(coin, period, lowestPrice, lowestPriceDate);
+                });
+            });
+            
+            // Re-initialize sortable feature
+            initSortable();
+            updateTableHeaders(); // Update sort arrows
+            updateLegend(); // Update legend
+        }
+
+        // Add new coin(s)
+        async function addNewCoin() {
+            const newCoinInputVal = newCoinInput.value.trim();
+            if (!newCoinInputVal) {
+                showNotification('Lütfen bir veya daha fazla coin sembolü girin!', false);
+                return;
+            }
+            
+            const newCoins = newCoinInputVal.split(',').map(coin => coin.trim().toUpperCase());
+            let addedCount = 0;
+
+            if (addCoinBtn) { // Check if addCoinBtn exists
+                addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Ekleniyor...';
+            }
+
+            for (const newCoin of newCoins) {
+                if (!newCoin) continue; // Skip empty entries
+
+                const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
+                
+                if (pairs.includes(fullPair)) {
+                    showNotification(`${newCoin} zaten listede!`, false);
+                    continue;
+                }
+                
+                try {
+                    const response = await axios.get(`https://api.binance.com/api/v3/ticker/price?symbol=${fullPair}`);
+                    if (response.data.symbol) {
+                        pairs.push(fullPair);
+                        addedCount++;
+                    }
+                } catch (error) {
+                    showNotification(`Geçersiz coin sembolü: ${newCoin}!`, false);
+                    console.error(`Error adding coin: ${newCoin}`, error);
+                }
+            }
+
+            if (addedCount > 0) {
+                saveCoins(); // Save coin list
+                fetchData(); // Update table
+                if (newCoinInput) newCoinInput.value = ''; // Check if newCoinInput exists
+                showNotification(`${addedCount} coin başarıyla eklendi!`);
+            } else if (newCoins.length > 0) {
+                showNotification('Hiçbir coin eklenemedi.', false);
+            }
+            
+            if (addCoinBtn) { // Check if addCoinBtn exists
+                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> <span class="button-text">Ekle</span>'; // Restore button text
+            }
+        }
+
+        // Sort table data
+        function sortData(columnKey, order, toggle = true) {
+            if (toggle) {
+                if (currentSortColumn === columnKey) {
+                    currentSortOrder = (currentSortOrder === 'asc' ? 'desc' : 'asc');
+                } else {
+                    currentSortColumn = columnKey;
+                    currentSortOrder = 'asc';
+                }
+            } else {
+                currentSortColumn = columnKey;
+                currentSortOrder = order;
+            }
+
+            allCoinData.sort((a, b) => {
+                let valA = a[columnKey];
+                let valB = b[columnKey];
+
+                // Use parseFloat for numerical values
+                if (columnKey !== 'pair') {
+                    valA = parseFloat(valA);
+                    valB = parseFloat(valB);
+                    // Put 'N/A' values at the end for sorting
+                    if (isNaN(valA) && isNaN(valB)) return 0;
+                    if (isNaN(valA)) return 1;
+                    if (isNaN(valB)) return -1;
+                }
+
+                if (valA < valB) {
+                    return currentSortOrder === 'asc' ? -1 : 1;
+                }
+                if (valA > valB) {
+                    return currentSortOrder === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+            renderTable(allCoinData);
+        }
+
+        // Update sort arrows in table headers
+        function updateTableHeaders() {
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.classList.remove('asc', 'desc');
+                let indicator = header.querySelector('.sort-indicator');
+                // Indicator is already created in renderTable, just updating here
+                if (indicator && header.getAttribute('data-sort-key') === currentSortColumn) {
+                    header.classList.add(currentSortOrder);
+                    indicator.innerHTML = currentSortOrder === 'asc' ? '&#9650;' : '&#9660;'; // Up/down arrow
+                } else if (indicator) {
+                    indicator.innerHTML = ''; // Clear arrows for other headers
+                }
+            });
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('crypto-tracker-settings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                if (autoRefreshToggle) autoRefreshToggle.checked = settings.autoRefreshEnabled;
+                if (refreshIntervalInput) refreshIntervalInput.value = settings.refreshInterval / 1000;
+                currentRefreshInterval = settings.refreshInterval;
+
+                // Load custom time intervals
+                customIntervals.weekly = settings.customIntervals?.weekly || 7;
+                customIntervals.monthly = settings.customIntervals?.monthly || 30;
+                customIntervals.yearly = settings.customIntervals?.yearly || 365;
+
+                if (weeklyIntervalDaysInput) weeklyIntervalDaysInput.value = customIntervals.weekly;
+                if (monthlyIntervalDaysInput) monthlyIntervalDaysInput.value = customIntervals.monthly;
+                if (yearlyIntervalDaysInput) yearlyIntervalDaysInput.value = customIntervals.yearly;
+
+                // Load custom column names
+                customColumnNames.weekly = settings.customColumnNames?.weekly || "1H %";
+                customColumnNames.monthly = settings.customColumnNames?.monthly || "1A %";
+                customColumnNames.yearly = settings.customColumnNames?.yearly || "1Y %";
+
+                if (colNameWeeklyInput) colNameWeeklyInput.value = customColumnNames.weekly;
+                if (colNameMonthlyInput) colNameMonthlyInput.value = customColumnNames.monthly;
+                if (colNameYearlyInput) colNameYearlyInput.value = customColumnNames.yearly;
+
+                // Load dynamic color rules
+                dynamicColorRules.weeklyPositiveThreshold = settings.dynamicColorRules?.weeklyPositiveThreshold || 5;
+                dynamicColorRules.monthlyPositiveThreshold = settings.dynamicColorRules?.monthlyPositiveThreshold || 10;
+                dynamicColorRules.yearlyPositiveThreshold = settings.dynamicColorRules?.yearlyPositiveThreshold || 20;
+                dynamicColorRules.highColor = settings.dynamicColorRules?.highColor || '#22c55e';
+                dynamicColorRules.lowColor = settings.dynamicColorRules?.lowColor || '#f59e0b';
+                // Negative color is fixed, so not loaded from here
+
+                if (weeklyPositiveThresholdInput) weeklyPositiveThresholdInput.value = dynamicColorRules.weeklyPositiveThreshold;
+                if (monthlyPositiveThresholdInput) monthlyPositiveThresholdInput.value = dynamicColorRules.monthlyPositiveThreshold;
+                if (yearlyPositiveThresholdInput) yearlyPositiveThresholdInput.value = dynamicColorRules.yearlyPositiveThreshold;
+                if (highPctColorInput) highPctColorInput.value = dynamicColorRules.highColor;
+                if (lowPctColorInput) lowPctColorInput.value = dynamicColorRules.lowColor;
+            }
+            toggleAutoRefresh(autoRefreshToggle ? autoRefreshToggle.checked : false);
+        }
+
+        // Save settings to localStorage
+        function saveSettings() {
+            const settings = {
+                autoRefreshEnabled: autoRefreshToggle ? autoRefreshToggle.checked : false,
+                refreshInterval: parseInt(refreshIntervalInput ? refreshIntervalInput.value : 120) * 1000,
+                customIntervals: {
+                    weekly: parseInt(weeklyIntervalDaysInput ? weeklyIntervalDaysInput.value : 7),
+                    monthly: parseInt(monthlyIntervalDaysInput ? monthlyIntervalDaysInput.value : 30),
+                    yearly: parseInt(yearlyIntervalDaysInput ? yearlyIntervalDaysInput.value : 365)
+                },
+                customColumnNames: {
+                    weekly: colNameWeeklyInput ? colNameWeeklyInput.value : "1H %",
+                    monthly: colNameMonthlyInput ? colNameMonthlyInput.value : "1A %",
+                    yearly: colNameYearlyInput ? colNameYearlyInput.value : "1Y %"
+                },
+                dynamicColorRules: {
+                    weeklyPositiveThreshold: parseInt(weeklyPositiveThresholdInput ? weeklyPositiveThresholdInput.value : 5),
+                    monthlyPositiveThreshold: parseInt(monthlyPositiveThresholdInput ? monthlyPositiveThresholdInput.value : 10),
+                    yearlyPositiveThreshold: parseInt(yearlyPositiveThresholdInput ? yearlyPositiveThresholdInput.value : 20),
+                    highColor: highPctColorInput ? highPctColorInput.value : '#22c55e',
+                    lowColor: lowPctColorInput ? lowPctColorInput.value : '#f59e0b',
+                    negativeColor: '#ef4444' // Negative color is fixed
+                }
+            };
+            localStorage.setItem('crypto-tracker-settings', JSON.stringify(settings));
+            currentRefreshInterval = settings.refreshInterval;
+            customIntervals = settings.customIntervals; // Apply current interval settings
+            customColumnNames = settings.customColumnNames; // Apply current column name settings
+            dynamicColorRules = settings.dynamicColorRules; // Apply current color rule settings
+            
+            toggleAutoRefresh(settings.autoRefreshEnabled); // Apply new auto-refresh settings immediately
+            showNotification('Ayarlar kaydedildi!');
+            if (settingsPanel) settingsPanel.classList.remove('show');
+            if (overlay) overlay.classList.remove('show');
+            fetchData(); // Re-fetch data when settings change
+        }
+
+        // Toggle auto-refresh on/off
+        function toggleAutoRefresh(enable) {
+            clearInterval(autoRefreshTimer); // Clear existing timer
+            if (enable) {
+                autoRefreshTimer = setInterval(fetchData, currentRefreshInterval);
+            }
+        }
+
+        // Reset sort order
+        function resetSort() {
+            currentSortColumn = 'pair'; // Set sort column to default
+            currentSortOrder = 'asc'; // Set sort order to default
+            fetchData(); // Re-fetch data and render in default order
+            showNotification('Sıralama sıfırlandı!');
+        }
+
+        // Show lowest price info panel
+        function showLowestPriceInfo(coin, period, lowestPrice, lowestPriceDate) {
+            let periodText = '';
+            if (period === 'weekly') periodText = customColumnNames.weekly;
+            else if (period === 'monthly') periodText = customColumnNames.monthly;
+            else if (period === 'yearly') periodText = customColumnNames.yearly;
+
+            if (lowestPriceInfoTitle) lowestPriceInfoTitle.innerHTML = `📉 ${coin} - ${periodText} En Düşük Fiyat`;
+            
+            if (lowestPriceDetails) {
+                if (lowestPrice === 'N/A' || lowestPriceDate === 'N/A') {
+                    lowestPriceDetails.textContent = `Bu dönem için en düşük fiyat bilgisi mevcut değil.`;
+                } else {
+                    lowestPriceDetails.innerHTML = `
+                        <p><strong>En Düşük Fiyat:</strong> ${formatPrice(lowestPrice)} USDT</p>
+                        <p><strong>Tarih:</strong> ${lowestPriceDate}</p>
+                    `;
+                }
+            }
+            
+            if (lowestPriceInfoPanel) lowestPriceInfoPanel.style.display = 'flex'; // Set display first
+            setTimeout(() => { // Allow reflow before adding 'show' class for transition
+                if (lowestPriceInfoPanel) lowestPriceInfoPanel.classList.add('show');
+                if (overlay) overlay.classList.add('show');
+            }, 10);
+        }
+
+        // Dynamically update legend
+        function updateLegend() {
+            const legendHigh = document.getElementById('legend-high');
+            const legendLow = document.getElementById('legend-low');
+            const legendNegative = document.getElementById('legend-negative');
+
+            if (legendHigh) legendHigh.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.highColor};"></span> ${customColumnNames.weekly}: >+${dynamicColorRules.weeklyPositiveThreshold}% | ${customColumnNames.monthly}: >+${dynamicColorRules.monthlyPositiveThreshold}% | ${customColumnNames.yearly}: >+${dynamicColorRules.yearlyPositiveThreshold}%`;
+            if (legendLow) legendLow.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.lowColor};"></span> ${customColumnNames.weekly}: %0 - +${dynamicColorRules.weeklyPositiveThreshold}% | ${customColumnNames.monthly}: %0 - +${dynamicColorRules.monthlyPositiveThreshold}% | ${customColumnNames.yearly}: %0 - +${dynamicColorRules.yearlyPositiveThreshold}%`;
+            if (legendNegative) legendNegative.innerHTML = `<span class="legend-color" style="background: ${dynamicColorRules.negativeColor};"></span> Herhangi bir negatif değer`;
+        }
+
+        // Event Listeners
+        // Use DOMContentLoaded to ensure all elements are loaded before attaching listeners
+        document.addEventListener('DOMContentLoaded', (event) => {
+            // Assign elements after DOM is loaded
+            updateTime = document.getElementById("updateTime");
+            priceTable = document.getElementById("priceTable");
+            refreshBtn = document.getElementById("refreshBtn");
+            addCoinBtn = document.getElementById("addCoinBtn");
+            newCoinInput = document.getElementById("newCoinInput");
+            // refreshIcon is no longer a separate element, it's part of refreshBtn
+            notification = document.getElementById("notification");
+            resetSortBtn = document.getElementById("resetSortBtn");
+
+            // Settings panel elements
+            settingsBtn = document.getElementById("settingsBtn");
+            settingsPanel = document.getElementById("settingsPanel");
+            closeSettingsBtn = document.getElementById("closeSettingsBtn");
+            autoRefreshToggle = document.getElementById("autoRefreshToggle");
+            refreshIntervalInput = document.getElementById("refreshInterval");
+            weeklyIntervalDaysInput = document.getElementById("weeklyIntervalDays");
+            monthlyIntervalDaysInput = document.getElementById("monthlyIntervalDays");
+            yearlyIntervalDaysInput = document.getElementById("yearlyIntervalDays");
+            colNameWeeklyInput = document.getElementById("colNameWeekly");
+            colNameMonthlyInput = document.getElementById("colNameMonthly");
+            colNameYearlyInput = document.getElementById("colNameYearly");
+            saveSettingsBtn = document.getElementById("saveSettingsBtn");
+            overlay = document.getElementById("overlay");
+
+            // Lowest price info panel elements
+            lowestPriceInfoPanel = document.getElementById("lowestPriceInfoPanel");
+            lowestPriceInfoTitle = document.getElementById("lowestPriceInfoTitle");
+            lowestPriceDetails = document.getElementById("lowestPriceDetails");
+            closeLowestPriceInfoBtn = document.getElementById("closeLowestPriceInfoBtn");
+
+            // Table header elements
+            thWeekly = document.getElementById("th-weekly");
+            thMonthly = document.getElementById("th-monthly");
+            thYearly = document.getElementById("th-yearly");
+
+            // Color rule settings elements
+            weeklyPositiveThresholdInput = document.getElementById("weeklyPositiveThreshold");
+            monthlyPositiveThresholdInput = document.getElementById("monthlyPositiveThreshold");
+            yearlyPositiveThresholdInput = document.getElementById("yearlyPositiveThreshold");
+            highPctColorInput = document.getElementById("highPctColor");
+            lowPctColorInput = document.getElementById("lowPctColor");
+
+            // Legend toggle elements
+            legendToggle = document.getElementById('legendToggle');
+            legendContent = document.getElementById('legendContent');
+            legendToggleIcon = document.getElementById('legendToggleIcon');
+
+            if (refreshBtn) refreshBtn.addEventListener('click', fetchData); // Refresh button click
+            if (addCoinBtn) addCoinBtn.addEventListener('click', addNewCoin); // Add button click
+            if (newCoinInput) {
+                newCoinInput.addEventListener('keypress', function(e) { // Enter key in input field
+                    if (e.key === 'Enter') {
+                        addNewCoin();
+                    }
+                });
+            }
+            if (resetSortBtn) resetSortBtn.addEventListener('click', resetSort); // Reset sort button click
+
+            // Settings button events
+            if (settingsBtn) {
+                settingsBtn.addEventListener('click', () => {
+                    console.log("Settings button clicked!"); // Debugging
+                    if (settingsPanel) settingsPanel.style.display = 'flex'; // Set display first
+                    setTimeout(() => { // Allow reflow before adding 'show' class for transition
+                        if (settingsPanel) settingsPanel.classList.add('show');
+                        if (overlay) overlay.classList.add('show');
+                    }, 10);
+                });
+            }
+
+            if (closeSettingsBtn) {
+                closeSettingsBtn.addEventListener('click', () => {
+                    console.log("Close Settings button clicked!"); // Debugging
+                    if (settingsPanel) settingsPanel.classList.remove('show');
+                    if (overlay) overlay.classList.remove('show');
+                    setTimeout(() => { // Hide display after transition
+                        if (settingsPanel) settingsPanel.style.display = 'none';
+                    }, 300); // Match transition duration
+                });
+            }
+
+            if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings); // Save settings button click
+
+            // Lowest price info panel close events
+            if (closeLowestPriceInfoBtn) {
+                closeLowestPriceInfoBtn.addEventListener('click', () => {
+                    console.log("Close Lowest Price Info button clicked!"); // Debugging
+                    if (lowestPriceInfoPanel) lowestPriceInfoPanel.classList.remove('show');
+                    if (overlay) overlay.classList.remove('show');
+                    setTimeout(() => { // Hide display after transition
+                        if (lowestPriceInfoPanel) lowestPriceInfoPanel.style.display = 'none';
+                    }, 300); // Match transition duration
+                });
+            }
+
+            // Close settings or info panel when clicking on background
+            if (overlay) {
+                overlay.addEventListener('click', () => {
+                    console.log("Overlay clicked!"); // Debugging
+                    if (settingsPanel && settingsPanel.classList.contains('show')) {
+                        settingsPanel.classList.remove('show');
+                        setTimeout(() => { settingsPanel.style.display = 'none'; }, 300);
+                    }
+                    if (lowestPriceInfoPanel && lowestPriceInfoPanel.classList.contains('show')) {
+                        lowestPriceInfoPanel.classList.remove('show');
+                        setTimeout(() => { lowestPriceInfoPanel.style.display = 'none'; }, 300);
+                    }
+                    if (overlay) overlay.classList.remove('show');
+                });
+            }
+
+            // Add sort event listeners to table headers
+            document.querySelectorAll('th.sortable').forEach(header => {
+                header.addEventListener('click', function() {
+                    console.log("Sortable header clicked:", this.getAttribute('data-sort-key')); // Debugging
+                    const sortKey = this.getAttribute('data-sort-key');
+                    if (sortKey) {
+                        sortData(sortKey, null, true); // Sort and toggle direction
+                    }
+                });
+            });
+
+            // Legend toggle event listener
+            if (legendToggle && legendContent && legendToggleIcon) {
+                legendToggle.addEventListener('click', () => {
+                    console.log("Legend toggle clicked!"); // Debugging
+                    legendContent.classList.toggle('legend-content-show');
+                    legendToggleIcon.classList.toggle('rotated');
+                });
+            }
+
+            // Add click event listeners to info icons in settings panel
+            document.querySelectorAll('.settings-panel .info-icon').forEach((icon, index) => {
+                console.log(`Attaching listener to info-icon #${index}. Data-info: ${icon.getAttribute('data-info')}`);
+                icon.addEventListener('click', function(event) {
+                    event.stopPropagation(); // Prevent click from propagating to parent elements (like setting-item)
+                    const infoText = this.getAttribute('data-info');
+                    if (infoText) {
+                        showNotification(infoText, true); // Show info as a success notification
+                    }
+                });
+            });
+
+            // Initialize application
+            loadSavedCoins(); // Load saved coins
+            loadSettings(); // Load saved settings
+            fetchData(); // Initial data fetch
+        });
+        
+        // Previous setInterval call removed, now managed by toggleAutoRefresh()
+    </script>
 </body>
 </html>
