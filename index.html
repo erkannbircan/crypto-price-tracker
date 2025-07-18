@@ -263,18 +263,28 @@
         }
 
         /* Loading Icon Styles */
-        .loading {
-            display: inline-block;
+        .loading-spinner {
+            display: none; /* Hidden by default */
             width: 18px;
             height: 18px;
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top-color: white;
             animation: spin 1s ease-in-out infinite;
+            margin-left: 8px; /* Space from icon/text */
         }
         
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        button.loading-state .button-text,
+        button.loading-state .fas {
+            display: none; /* Hide text and icon when loading */
+        }
+
+        button.loading-state .loading-spinner {
+            display: inline-block; /* Show spinner when loading */
         }
         
         /* Notification Box Styles */
@@ -345,7 +355,7 @@
             display: flex; /* Always flex, control visibility with opacity/transform */
             flex-direction: column;
             gap: 25px; /* More space between sections */
-            width: clamp(300px, 90vw, 700px); /* Responsive width for desktop and mobile */
+            width: clamp(300px, 90vw, 750px); /* Responsive width for desktop and mobile */
             border: 1px solid rgba(0,0,0,0.05); /* Very subtle border */
             max-height: 90vh;
             overflow-y: auto;
@@ -371,7 +381,8 @@
         /* New Grid Container for Settings */
         .settings-grid-container {
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 3 equal columns */
+            /* Reverting to a more fixed 3-column layout for desktop, allowing wrap for smaller screens */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
             gap: 20px 30px; /* Row gap, Column gap */
             align-items: start; /* Align items to the start of their grid area */
             padding: 15px; /* Padding around the grid content */
@@ -624,12 +635,12 @@
             
             /* Table specific adjustments for mobile */
             table {
+                font-size: 0.7rem; /* Smaller font size for mobile table */
                 table-layout: fixed; /* Ensure fixed layout for mobile */
                 width: 100%;
             }
             th, td {
                 padding: 8px 5px; /* Reduced padding */
-                font-size: 0.75rem; /* Smaller font size */
                 white-space: nowrap; /* Prevent text wrapping in table cells */
                 overflow: hidden; /* Hide overflow content */
                 text-overflow: ellipsis; /* Add ellipsis for overflowing text */
@@ -650,8 +661,8 @@
             table th:nth-child(4), table td:nth-child(4), /* 1H % */
             table th:nth-child(5), table td:nth-child(5), /* 1A % */
             table th:nth-child(6), table td:nth-child(6) { /* 1Y % */
-                width: 18%; /* Increased width for percentages */
-                min-width: 60px; /* Increased min-width */
+                width: 16%; /* Adjusted width for percentages */
+                min-width: 55px; /* Adjusted min-width */
                 white-space: normal; /* Allow wrapping for percentages */
             }
             table th:nth-child(7), table td:nth-child(7) { /* Delete */
@@ -693,6 +704,13 @@
                 margin-right: 0; /* Remove margin next to hidden text */
                 font-size: 1.1rem; /* Adjust icon size */
             }
+            
+            /* Hide button text when in loading state on mobile */
+            button.loading-state #refreshBtn .fas,
+            button.loading-state #settingsBtn .fas {
+                display: none;
+            }
+
 
             /* Adjust add-coin for mobile */
             .add-coin {
@@ -808,13 +826,20 @@
         <div class="controls">
             <button id="refreshBtn" title="Tablodaki tüm coinlerin fiyatlarını ve yüzde değişimlerini günceller.">
                 <i class="fas fa-sync-alt"></i><span class="button-text">Fiyatları Yenile</span>
+                <div class="loading-spinner"></div>
             </button>
             <div class="add-coin">
                 <input type="text" id="newCoinInput" placeholder="Coin ekle (örn. BTC,ETH,SOL)" title="Yeni bir kripto para birimi eklemek için sembolünü girin (örn. BTC). Birden fazla coin eklemek için virgül kullanın (örn. JUV,ACM,PORTO).">
-                <button id="addCoinBtn" title="Girilen coin(leri) listeye ekler."><i class="fas fa-plus"></i> <span class="button-text">Ekle</span></button>
+                <button id="addCoinBtn" title="Girilen coin(leri) listeye ekler.">
+                    <i class="fas fa-plus"></i> <span class="button-text">Ekle</span>
+                    <div class="loading-spinner"></div>
+                </button>
             </div>
             <!-- New settings button -->
-            <button id="settingsBtn" title="Uygulama ayarlarını değiştirmek için tıklayın."><i class="fas fa-cog"></i> <span class="button-text">Ayarlar</span></button>
+            <button id="settingsBtn" title="Uygulama ayarlarını değiştirmek için tıklayın.">
+                <i class="fas fa-cog"></i> <span class="button-text">Ayarlar</span>
+                <div class="loading-spinner"></div>
+            </button>
         </div>
         
         <table>
@@ -978,7 +1003,6 @@
         let refreshBtn;
         let addCoinBtn;
         let newCoinInput;
-        // refreshIcon is no longer a separate element, it's part of refreshBtn
         let notification;
         let resetSortBtn;
 
@@ -1240,7 +1264,7 @@
         async function fetchData() {
             // Show loading animation on the refresh button
             if (refreshBtn) {
-                refreshBtn.innerHTML = '<div class="loading"></div><span class="button-text">Yenileniyor...</span>';
+                refreshBtn.classList.add('loading-state');
             }
 
             if (priceTable) {
@@ -1260,7 +1284,7 @@
 
             // Restore refresh button text
             if (refreshBtn) {
-                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i><span class="button-text">Fiyatları Yenile</span>';
+                refreshBtn.classList.remove('loading-state');
             }
         }
 
@@ -1372,7 +1396,7 @@
             let addedCount = 0;
 
             if (addCoinBtn) { // Check if addCoinBtn exists
-                addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Ekleniyor...';
+                addCoinBtn.classList.add('loading-state');
             }
 
             for (const newCoin of newCoins) {
@@ -1407,7 +1431,7 @@
             }
             
             if (addCoinBtn) { // Check if addCoinBtn exists
-                addCoinBtn.innerHTML = '<i class="fas fa-plus"></i> <span class="button-text">Ekle</span>'; // Restore button text
+                addCoinBtn.classList.remove('loading-state');
             }
         }
 
@@ -1609,7 +1633,6 @@
             refreshBtn = document.getElementById("refreshBtn");
             addCoinBtn = document.getElementById("addCoinBtn");
             newCoinInput = document.getElementById("newCoinInput");
-            // refreshIcon is no longer a separate element, it's part of refreshBtn
             notification = document.getElementById("notification");
             resetSortBtn = document.getElementById("resetSortBtn");
 
@@ -1651,23 +1674,21 @@
             legendContent = document.getElementById('legendContent');
             legendToggleIcon = document.getElementById('legendToggleIcon');
 
-            if (refreshBtn) refreshBtn.addEventListener('click', fetchData); // Refresh button click
-            if (addCoinBtn) addCoinBtn.addEventListener('click', addNewCoin); // Add button click
+            if (refreshBtn) refreshBtn.addEventListener('click', fetchData);
+            if (addCoinBtn) addCoinBtn.addEventListener('click', addNewCoin);
             if (newCoinInput) {
-                newCoinInput.addEventListener('keypress', function(e) { // Enter key in input field
+                newCoinInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
                         addNewCoin();
                     }
                 });
             }
-            if (resetSortBtn) resetSortBtn.addEventListener('click', resetSort); // Reset sort button click
+            if (resetSortBtn) resetSortBtn.addEventListener('click', resetSort);
 
-            // Settings button events
             if (settingsBtn) {
                 settingsBtn.addEventListener('click', () => {
-                    console.log("Settings button clicked!"); // Debugging
-                    if (settingsPanel) settingsPanel.style.display = 'flex'; // Set display first
-                    setTimeout(() => { // Allow reflow before adding 'show' class for transition
+                    if (settingsPanel) settingsPanel.style.display = 'flex';
+                    setTimeout(() => {
                         if (settingsPanel) settingsPanel.classList.add('show');
                         if (overlay) overlay.classList.add('show');
                     }, 10);
@@ -1676,33 +1697,28 @@
 
             if (closeSettingsBtn) {
                 closeSettingsBtn.addEventListener('click', () => {
-                    console.log("Close Settings button clicked!"); // Debugging
                     if (settingsPanel) settingsPanel.classList.remove('show');
                     if (overlay) overlay.classList.remove('show');
-                    setTimeout(() => { // Hide display after transition
+                    setTimeout(() => {
                         if (settingsPanel) settingsPanel.style.display = 'none';
-                    }, 300); // Match transition duration
+                    }, 300);
                 });
             }
 
-            if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings); // Save settings button click
+            if (saveSettingsBtn) saveSettingsBtn.addEventListener('click', saveSettings);
 
-            // Lowest price info panel close events
             if (closeLowestPriceInfoBtn) {
                 closeLowestPriceInfoBtn.addEventListener('click', () => {
-                    console.log("Close Lowest Price Info button clicked!"); // Debugging
                     if (lowestPriceInfoPanel) lowestPriceInfoPanel.classList.remove('show');
                     if (overlay) overlay.classList.remove('show');
-                    setTimeout(() => { // Hide display after transition
+                    setTimeout(() => {
                         if (lowestPriceInfoPanel) lowestPriceInfoPanel.style.display = 'none';
-                    }, 300); // Match transition duration
+                    }, 300);
                 });
             }
 
-            // Close settings or info panel when clicking on background
             if (overlay) {
                 overlay.addEventListener('click', () => {
-                    console.log("Overlay clicked!"); // Debugging
                     if (settingsPanel && settingsPanel.classList.contains('show')) {
                         settingsPanel.classList.remove('show');
                         setTimeout(() => { settingsPanel.style.display = 'none'; }, 300);
@@ -1715,45 +1731,73 @@
                 });
             }
 
-            // Add sort event listeners to table headers
             document.querySelectorAll('th.sortable').forEach(header => {
                 header.addEventListener('click', function() {
-                    console.log("Sortable header clicked:", this.getAttribute('data-sort-key')); // Debugging
                     const sortKey = this.getAttribute('data-sort-key');
                     if (sortKey) {
-                        sortData(sortKey, null, true); // Sort and toggle direction
+                        sortData(sortKey, null, true);
                     }
                 });
             });
 
-            // Legend toggle event listener
             if (legendToggle && legendContent && legendToggleIcon) {
                 legendToggle.addEventListener('click', () => {
-                    console.log("Legend toggle clicked!"); // Debugging
                     legendContent.classList.toggle('legend-content-show');
                     legendToggleIcon.classList.toggle('rotated');
                 });
             }
 
-            // Add click event listeners to info icons in settings panel
-            document.querySelectorAll('.settings-panel .info-icon').forEach((icon, index) => {
-                console.log(`Attaching listener to info-icon #${index}. Data-info: ${icon.getAttribute('data-info')}`);
+            document.querySelectorAll('.settings-panel .info-icon').forEach(icon => {
                 icon.addEventListener('click', function(event) {
-                    event.stopPropagation(); // Prevent click from propagating to parent elements (like setting-item)
+                    event.stopPropagation();
                     const infoText = this.getAttribute('data-info');
                     if (infoText) {
-                        showNotification(infoText, true); // Show info as a success notification
+                        showNotification(infoText, true);
                     }
                 });
             });
 
-            // Initialize application
-            loadSavedCoins(); // Load saved coins
-            loadSettings(); // Load saved settings
-            fetchData(); // Initial data fetch
+            // Initial load and fetch
+            loadSavedCoins();
+            loadSettings();
+            fetchData();
+
+            // Adjust button text on window resize for responsiveness
+            window.addEventListener('resize', () => {
+                // Refresh button
+                if (refreshBtn) {
+                    if (window.innerWidth <= 768) {
+                        refreshBtn.querySelector('.button-text').style.display = 'none';
+                        refreshBtn.querySelector('.fas').style.marginRight = '0';
+                    } else {
+                        refreshBtn.querySelector('.button-text').style.display = 'inline';
+                        refreshBtn.querySelector('.fas').style.marginRight = '8px';
+                    }
+                }
+                // Add button
+                if (addCoinBtn) {
+                    if (window.innerWidth <= 768) {
+                        addCoinBtn.querySelector('.button-text').style.display = 'none';
+                        addCoinBtn.querySelector('.fas').style.marginRight = '0';
+                    } else {
+                        addCoinBtn.querySelector('.button-text').style.display = 'inline';
+                        addCoinBtn.querySelector('.fas').style.marginRight = '8px';
+                    }
+                }
+                // Settings button
+                if (settingsBtn) {
+                    if (window.innerWidth <= 768) {
+                        settingsBtn.querySelector('.button-text').style.display = 'none';
+                        settingsBtn.querySelector('.fas').style.marginRight = '0';
+                    } else {
+                        settingsBtn.querySelector('.button-text').style.display = 'inline';
+                        settingsBtn.querySelector('.fas').style.marginRight = '8px';
+                    }
+                }
+            });
+            // Initial check for window size on load
+            window.dispatchEvent(new Event('resize'));
         });
-        
-        // Previous setInterval call removed, now managed by toggleAutoRefresh()
     </script>
 </body>
 </html>
