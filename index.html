@@ -345,7 +345,7 @@
             display: flex; /* Always flex, control visibility with opacity/transform */
             flex-direction: column;
             gap: 25px; /* More space between sections */
-            width: clamp(300px, 80vw, 850px); /* Responsive width for desktop and mobile */
+            width: clamp(300px, 90vw, 700px); /* Responsive width for desktop and mobile */
             border: 1px solid rgba(0,0,0,0.05); /* Very subtle border */
             max-height: 90vh;
             overflow-y: auto;
@@ -650,8 +650,9 @@
             table th:nth-child(4), table td:nth-child(4), /* 1H % */
             table th:nth-child(5), table td:nth-child(5), /* 1A % */
             table th:nth-child(6), table td:nth-child(6) { /* 1Y % */
-                width: 15%; /* Smaller fixed width for percentages */
-                min-width: 50px;
+                width: 18%; /* Increased width for percentages */
+                min-width: 60px; /* Increased min-width */
+                white-space: normal; /* Allow wrapping for percentages */
             }
             table th:nth-child(7), table td:nth-child(7) { /* Delete */
                 width: 40px;
@@ -977,7 +978,7 @@
         let refreshBtn;
         let addCoinBtn;
         let newCoinInput;
-        let refreshIcon;
+        // refreshIcon is no longer a separate element, it's part of refreshBtn
         let notification;
         let resetSortBtn;
 
@@ -1237,10 +1238,11 @@
 
         // Fetch data for all coins and update the table
         async function fetchData() {
-            // Ensure elements exist before trying to modify them
-            if (refreshIcon) {
-                refreshIcon.innerHTML = '<div class="loading"></div>'; // Show loading animation
+            // Show loading animation on the refresh button
+            if (refreshBtn) {
+                refreshBtn.innerHTML = '<div class="loading"></div><span class="button-text">Yenileniyor...</span>';
             }
+
             if (priceTable) {
                 priceTable.innerHTML = ''; // Clear the table
             }
@@ -1254,7 +1256,12 @@
             if (updateTime) {
                 updateTime.textContent = new Date().toLocaleString(); // Show last updated time
             }
-            showNotification('Prices successfully updated!');
+            showNotification('Fiyatlar başarıyla güncellendi!');
+
+            // Restore refresh button text
+            if (refreshBtn) {
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i><span class="button-text">Fiyatları Yenile</span>';
+            }
         }
 
         // Render the table based on the provided data
@@ -1332,7 +1339,7 @@
                     pairs = pairs.filter(coin => coin !== coinToRemove);
                     saveCoins(); // Save coin list
                     fetchData(); // Re-render table
-                    showNotification(`${coinToRemove.replace("USDT", "")} removed`);
+                    showNotification(`${coinToRemove.replace("USDT", "")} kaldırıldı.`);
                 });
             });
 
@@ -1357,7 +1364,7 @@
         async function addNewCoin() {
             const newCoinInputVal = newCoinInput.value.trim();
             if (!newCoinInputVal) {
-                showNotification('Please enter one or more coin symbols!', false);
+                showNotification('Lütfen bir veya daha fazla coin sembolü girin!', false);
                 return;
             }
             
@@ -1365,7 +1372,7 @@
             let addedCount = 0;
 
             if (addCoinBtn) { // Check if addCoinBtn exists
-                addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Adding...';
+                addCoinBtn.innerHTML = '<div class="loading" style="margin-right: 5px;"></div> Ekleniyor...';
             }
 
             for (const newCoin of newCoins) {
@@ -1374,7 +1381,7 @@
                 const fullPair = newCoin.endsWith('USDT') ? newCoin : `${newCoin}USDT`;
                 
                 if (pairs.includes(fullPair)) {
-                    showNotification(`${newCoin} is already in the list!`, false);
+                    showNotification(`${newCoin} zaten listede!`, false);
                     continue;
                 }
                 
@@ -1385,7 +1392,7 @@
                         addedCount++;
                     }
                 } catch (error) {
-                    showNotification(`Invalid coin symbol: ${newCoin}!`, false);
+                    showNotification(`Geçersiz coin sembolü: ${newCoin}!`, false);
                     console.error(`Error adding coin: ${newCoin}`, error);
                 }
             }
@@ -1394,9 +1401,9 @@
                 saveCoins(); // Save coin list
                 fetchData(); // Update table
                 if (newCoinInput) newCoinInput.value = ''; // Check if newCoinInput exists
-                showNotification(`${addedCount} coin(s) successfully added!`);
+                showNotification(`${addedCount} coin başarıyla eklendi!`);
             } else if (newCoins.length > 0) {
-                showNotification('No coins could be added.', false);
+                showNotification('Hiçbir coin eklenemedi.', false);
             }
             
             if (addCoinBtn) { // Check if addCoinBtn exists
@@ -1533,7 +1540,7 @@
             dynamicColorRules = settings.dynamicColorRules; // Apply current color rule settings
             
             toggleAutoRefresh(settings.autoRefreshEnabled); // Apply new auto-refresh settings immediately
-            showNotification('Settings saved!');
+            showNotification('Ayarlar kaydedildi!');
             if (settingsPanel) settingsPanel.classList.remove('show');
             if (overlay) overlay.classList.remove('show');
             fetchData(); // Re-fetch data when settings change
@@ -1552,7 +1559,7 @@
             currentSortColumn = 'pair'; // Set sort column to default
             currentSortOrder = 'asc'; // Set sort order to default
             fetchData(); // Re-fetch data and render in default order
-            showNotification('Sort order reset!');
+            showNotification('Sıralama sıfırlandı!');
         }
 
         // Show lowest price info panel
@@ -1602,7 +1609,7 @@
             refreshBtn = document.getElementById("refreshBtn");
             addCoinBtn = document.getElementById("addCoinBtn");
             newCoinInput = document.getElementById("newCoinInput");
-            refreshIcon = document.getElementById("refreshIcon");
+            // refreshIcon is no longer a separate element, it's part of refreshBtn
             notification = document.getElementById("notification");
             resetSortBtn = document.getElementById("resetSortBtn");
 
@@ -1658,6 +1665,7 @@
             // Settings button events
             if (settingsBtn) {
                 settingsBtn.addEventListener('click', () => {
+                    console.log("Settings button clicked!"); // Debugging
                     if (settingsPanel) settingsPanel.style.display = 'flex'; // Set display first
                     setTimeout(() => { // Allow reflow before adding 'show' class for transition
                         if (settingsPanel) settingsPanel.classList.add('show');
@@ -1668,6 +1676,7 @@
 
             if (closeSettingsBtn) {
                 closeSettingsBtn.addEventListener('click', () => {
+                    console.log("Close Settings button clicked!"); // Debugging
                     if (settingsPanel) settingsPanel.classList.remove('show');
                     if (overlay) overlay.classList.remove('show');
                     setTimeout(() => { // Hide display after transition
@@ -1681,6 +1690,7 @@
             // Lowest price info panel close events
             if (closeLowestPriceInfoBtn) {
                 closeLowestPriceInfoBtn.addEventListener('click', () => {
+                    console.log("Close Lowest Price Info button clicked!"); // Debugging
                     if (lowestPriceInfoPanel) lowestPriceInfoPanel.classList.remove('show');
                     if (overlay) overlay.classList.remove('show');
                     setTimeout(() => { // Hide display after transition
@@ -1692,6 +1702,7 @@
             // Close settings or info panel when clicking on background
             if (overlay) {
                 overlay.addEventListener('click', () => {
+                    console.log("Overlay clicked!"); // Debugging
                     if (settingsPanel && settingsPanel.classList.contains('show')) {
                         settingsPanel.classList.remove('show');
                         setTimeout(() => { settingsPanel.style.display = 'none'; }, 300);
@@ -1707,6 +1718,7 @@
             // Add sort event listeners to table headers
             document.querySelectorAll('th.sortable').forEach(header => {
                 header.addEventListener('click', function() {
+                    console.log("Sortable header clicked:", this.getAttribute('data-sort-key')); // Debugging
                     const sortKey = this.getAttribute('data-sort-key');
                     if (sortKey) {
                         sortData(sortKey, null, true); // Sort and toggle direction
@@ -1717,6 +1729,7 @@
             // Legend toggle event listener
             if (legendToggle && legendContent && legendToggleIcon) {
                 legendToggle.addEventListener('click', () => {
+                    console.log("Legend toggle clicked!"); // Debugging
                     legendContent.classList.toggle('legend-content-show');
                     legendToggleIcon.classList.toggle('rotated');
                 });
